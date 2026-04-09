@@ -6,7 +6,7 @@
 
 Browser-first helpers for the iRacing `members-ng` site.
 
-Discord: https://discord.gg/hxVf8wcGaV
+Discord of the original iRefined repository: https://discord.gg/hxVf8wcGaV
 
 ## ⚡ Quick Install (GitHub Releases)
 
