@@ -4,8 +4,7 @@
 >
 > This repository is a browser-only helper layer for the public `members-ng` website. It does **not** inject into the installed iRacing UI, does **not** rely on closed Electron/devtools ports, does **not** attach to the local sim client, does **not** automate driving inputs, and does **not** attempt to bypass authentication or security controls. The intent of this fork is to provide UI helpers on top of the existing logged-in website experience only, using actions and state already exposed through `members-ng`. If any behavior here is considered incompatible with current iRacing policy, please open an issue or contact the maintainer so it can be adjusted cooperatively.
 
-Browser-first helpers for the iRacing `members-ng` site.
-
+This repository and its contributors are not affiliated with iRefined. This repository is a fork of iRefined.
 Discord of the original iRefined repository: https://discord.gg/hxVf8wcGaV
 
 ## ⚡ Quick Install (GitHub Releases)
