@@ -1,5 +1,7 @@
 # iRefined Browser
 
+Discord: https://discord.gg/hxVf8wcGaV
+
 ## Quick Install (GitHub Releases)
 
 If you just want to use the extension, do this:
