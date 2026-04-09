@@ -1,5 +1,9 @@
 # iRefined Browser 🚀
 
+> **Note for iRacing Staff**
+>
+> This repository is a browser-only helper layer for the public `members-ng` website. It does **not** inject into the installed iRacing UI, does **not** rely on closed Electron/devtools ports, does **not** attach to the local sim client, does **not** automate driving inputs, and does **not** attempt to bypass authentication or security controls. The intent of this fork is to provide UI helpers on top of the existing logged-in website experience only, using actions and state already exposed through `members-ng`. If any behavior here is considered incompatible with current iRacing policy, please open an issue or contact the maintainer so it can be adjusted cooperatively.
+
 Browser-first helpers for the iRacing `members-ng` site.
 
 Discord: https://discord.gg/hxVf8wcGaV
@@ -24,10 +28,6 @@ Quick notes:
 - when a new GitHub release comes out, download the new zip, extract it, and click `Reload` on the browser extensions page
 - unpacked extensions installed from GitHub Releases do not auto-update by themselves in Chromium browsers
 - the extension itself will warn you inside the iRefined UI when a newer GitHub Release is available
-
-> **Note for iRacing Staff**
->
-> This repository is a browser-only helper layer for the public `members-ng` website. It does **not** inject into the installed iRacing UI, does **not** rely on closed Electron/devtools ports, does **not** attach to the local sim client, does **not** automate driving inputs, and does **not** attempt to bypass authentication or security controls. The intent of this fork is to provide UI helpers on top of the existing logged-in website experience only, using actions and state already exposed through `members-ng`. If any behavior here is considered incompatible with current iRacing policy, please open an issue or contact the maintainer so it can be adjusted cooperatively.
 
 `iRefined Browser` is a browser-first extension for the iRacing `members-ng` site:
 
