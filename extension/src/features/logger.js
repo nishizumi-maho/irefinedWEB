@@ -1,4 +1,3 @@
-import { getFeatureID } from '../helpers/feature-helpers.js';
 import features from '../feature-manager.js';
 import { $ } from 'select-dom';
 import './logger.css'
@@ -12,12 +11,15 @@ logContainer.style.display = 'none';
 export function log(message) {
 
     let logLine = document.createElement('div');
+    let timeLabel = document.createElement('span');
     let date = new Date();
     let time = date.toTimeString().split(' ')[0];
     logLine.style.cssText = 'margin-bottom: 5px;';
-    logLine.innerHTML = '<span>' + time + '</span> - ' + message;
+    timeLabel.textContent = time;
+    logLine.append(timeLabel, document.createTextNode(' - ' + String(message)));
     logContainer.appendChild(logLine);
     logContainer.scrollTop = logContainer.scrollHeight;
+    console.info('[iRefined]', String(message));
 
 }
 
@@ -26,20 +28,29 @@ let appended = false;
 async function init(activate = true) {
 
     if (!activate) {
-        $('#iref-log').style.display = 'none';
+        const existingLog = $('#iref-log');
+        if (existingLog) {
+            existingLog.style.display = 'none';
+        }
         return;
     }
 
     if (!appended) {
+        if (!document.body) {
+            return;
+        }
         document.body.appendChild(logContainer);
         appended = true;
     }
 
-    $('#iref-log').style.display = 'block';
+    const existingLog = $('#iref-log');
+    if (existingLog) {
+        existingLog.style.display = 'block';
+    }
 
 }
 
-const id = getFeatureID(import.meta.url);
+const id = "logger";
 const bodyClass = 'iref-' + id;
 
 features.add(id, true, selector, bodyClass, init);

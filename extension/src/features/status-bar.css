@@ -1,5 +1,10 @@
 :root {
   --iref-bar-highlight: #6120ff;
+  --iref-registration-bg: #214d1f;
+  --iref-registration-border: #8af26f;
+  --iref-registration-primary: #ad7a19;
+  --iref-registration-primary-text: #1e1808;
+  --iref-registration-secondary: #5f775b;
 }
 
 .iref-status-bar {
@@ -22,6 +27,107 @@
   bottom: 1px;
   padding-bottom: 5px;
   z-index: 9001;
+}
+
+.iref-registration-banner {
+  position: fixed;
+  top: 58px;
+  left: 28px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  padding: 12px 18px;
+  border: 1px solid rgba(138, 242, 111, 0.5);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(42, 95, 36, 0.98), rgba(28, 70, 27, 0.98));
+  color: #eef9e9;
+  box-shadow: rgba(5, 5, 15, 0.24) 0px 18px 32px -10px;
+  z-index: 9002;
+}
+
+.iref-registration-banner.hidden {
+  display: none;
+}
+
+.iref-registration-banner.is-registering {
+  border-color: rgba(255, 213, 115, 0.55);
+  background: linear-gradient(180deg, rgba(80, 88, 23, 0.98), rgba(67, 76, 20, 0.98));
+}
+
+.iref-registration-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.iref-registration-pill {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.iref-registration-copy {
+  min-width: 0;
+}
+
+.iref-registration-title {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.iref-registration-subtitle {
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(238, 249, 233, 0.82);
+}
+
+.iref-registration-banner-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.iref-registration-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease;
+}
+
+.iref-registration-action:hover {
+  opacity: 0.92;
+}
+
+.iref-registration-action-secondary {
+  background: rgba(255, 255, 255, 0.18);
+  color: #f7fff3;
+}
+
+.iref-registration-action-primary {
+  background: var(--iref-registration-primary);
+  color: var(--iref-registration-primary-text);
 }
 
 #iref-bar {

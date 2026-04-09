@@ -1,14 +1,20 @@
 import { io } from "socket.io-client";
 import { log } from "../features/logger.js";
 
+function getSentryRelease() {
+  return typeof SENTRY_RELEASE !== "undefined" ? SENTRY_RELEASE : null;
+}
+
 let wsInitCheck = setInterval(() => {
-  if (SENTRY_RELEASE) {
+  if (getSentryRelease()) {
     clearInterval(wsInitCheck);
     initWS();
   }
 }, 1000);
 
 let clientSocket;
+let authSocket;
+let initialized = false;
 let callbacks = [];
 
 function id() {
@@ -29,12 +35,19 @@ function formatSeasonName(seasonName) {
 }
 
 function initWS() {
-  const irVersion = SENTRY_RELEASE.id.substring(
+  const release = getSentryRelease();
+
+  if (!release?.id) {
+    log("🚫 Could not detect the iRacing client version for websocket auth");
+    return;
+  }
+
+  const irVersion = release.id.substring(
     0,
-    SENTRY_RELEASE.id.indexOf("-")
+    release.id.indexOf("-")
   );
 
-  const authSocket = io("https://members-ng.iracing.com", {
+  authSocket = io("https://members-ng.iracing.com", {
     reconnectionAttempts: 100,
     auth: {
       clientVersion: irVersion,
@@ -51,6 +64,7 @@ function initWS() {
   });
 
   authSocket.on("connect", () => {
+    initialized = false;
     log("⚡ Connected to iRacing");
   });
 
@@ -58,8 +72,28 @@ function initWS() {
     log("⛓️‍💥 Disconnected from iRacing");
   });
 
+  authSocket.on("connect_error", (error) => {
+    log(`🚫 iRacing auth socket error: ${error.message}`);
+  });
+
+  clientSocket.on("connect", () => {
+    log("🔌 Connected to client.io");
+  });
+
+  clientSocket.on("disconnect", () => {
+    initialized = false;
+    log("🔌 Disconnected from client.io");
+  });
+
+  clientSocket.on("connect_error", (error) => {
+    initialized = false;
+    log(`🚫 client.io socket error: ${error.message}`);
+  });
+
   clientSocket.on("initialized", (data) => {
+    initialized = true;
     authSocket.emit("now");
+    log("✅ iRacing websocket ready");
 
     clientSocket.emit("data_services", {
       refid: id(),
@@ -95,13 +129,19 @@ function initWS() {
 }
 
 function send(event, data) {
+  if (!clientSocket || !clientSocket.connected || !initialized) {
+    log("🚫 iRacing websocket is not ready yet");
+    return false;
+  }
+
   data.refid = id();
   clientSocket.emit(event, data);
+  return true;
 }
 
 function withdraw() {
   log("🚫 Withdrawing from current session");
-  send("data_services", {
+  return send("data_services", {
     service: "registration",
     method: "withdraw",
     args: {},
@@ -132,13 +172,18 @@ function register(
     data.args.subsession_id = subsession_id;
   }
 
-  send("data_services", data);
+  return send("data_services", data);
+}
+
+function isReady() {
+  return !!clientSocket && clientSocket.connected && initialized;
 }
 
 const ws = {
   send,
   register,
   withdraw,
+  isReady,
   callbacks,
 };
 

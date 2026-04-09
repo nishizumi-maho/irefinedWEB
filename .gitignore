@@ -1,8 +1,10 @@
 .DS_Store
 
-node_modules
-dist
-release
+node_modules/
+dist/
+output/
+.playwright-cli/
+release/
 
 target
 Cargo.lock
@@ -10,3 +12,7 @@ Cargo.lock
 *.asar
 *.dev
 *.log
+*.webm
+*.trace
+*.network
+*.stacks

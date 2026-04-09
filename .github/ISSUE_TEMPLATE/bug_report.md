@@ -8,17 +8,31 @@ assignees: ''
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is.
+Describe the broken behavior in one or two sentences.
 
 **To Reproduce**
-Steps to reproduce the behaviour:
+Steps to reproduce the behavior:
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
 4. See error
 
-**Expected behaviour**
-A clear and concise description of what you expected to happen.
+**Expected behavior**
+Describe what you expected to happen.
+
+**Environment**
+- Browser:
+- Browser version:
+- Extension version:
+- Page URL or page type:
+- Were you already registered in another session?
+- Was Queue involved?
+
+**Logs**
+Please include any relevant iRefined logs.
+
+- In-page log panel screenshot or copied lines:
+- DevTools console lines prefixed with `[iRefined]`:
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.

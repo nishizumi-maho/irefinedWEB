@@ -1,5 +1,12 @@
-import { getFeatureID } from "../helpers/feature-helpers.js";
 import features from "../feature-manager.js";
+import { getSettings, saveSettings } from "../helpers/settings.js";
+import { initSoundSupport, playQueueRegisteredSound } from "../helpers/sound.js";
+import {
+  checkForUpdates,
+  CURRENT_DISPLAY_VERSION,
+  getCachedUpdateInfo,
+  openLatestRelease,
+} from "../helpers/updates.js";
 import "./settings-panel.css";
 import React from "dom-chef";
 import { $ } from "select-dom";
@@ -9,18 +16,103 @@ async function initSettingsPanel(activate = true) {
     return;
   }
 
+  const ensureOverlay = () => {
+    let overlay = $("#iref-settings-overlay");
+
+    if (overlay) {
+      return overlay;
+    }
+
+    overlay = (
+      <div id="iref-settings-overlay" class="iref-settings-overlay">
+        <div class="iref-settings-backdrop"></div>
+        <div id="iref-settings-dialog" class="iref-settings-dialog"></div>
+      </div>
+    );
+
+    overlay.querySelector(".iref-settings-backdrop").addEventListener("click", () => {
+      handleClose();
+    });
+
+    document.body.appendChild(overlay);
+    return overlay;
+  };
+
   const handleClose = (e) => {
-    // <button> was clicked
-    $("#update-content-modal").click();
-    $("body").classList.remove("iref-settings-panel-open");
-    $("#iref-log").scrollTop = $("#iref-log").scrollHeight;
+    const overlay = $("#iref-settings-overlay");
+    const body = $("body");
+    const logEl = $("#iref-log");
+
+    if (overlay) {
+      overlay.classList.remove("open");
+    }
+
+    if (body) {
+      body.classList.remove("iref-settings-panel-open");
+    }
+
+    if (logEl) {
+      logEl.scrollTop = logEl.scrollHeight;
+    }
   };
 
   const handleReload = (e) => {
     location.reload();
   };
 
-  let settings = JSON.parse(localStorage.getItem("iref_settings")) || {};
+  const handleOpenLatestRelease = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openLatestRelease();
+  };
+
+  const handleTestSound = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    initSoundSupport();
+    playQueueRegisteredSound({ ignoreEnabled: true });
+  };
+
+  let settings = getSettings();
+  let updateInfo = getCachedUpdateInfo();
+
+  const renderUpdateNote = (info = getCachedUpdateInfo()) => {
+    const note = $("#iref-update-note");
+
+    if (!note) {
+      return;
+    }
+
+    note.innerHTML = "";
+
+    if (!info.available) {
+      note.classList.add("hidden");
+      return;
+    }
+
+    note.classList.remove("hidden");
+    const title = document.createElement("strong");
+    title.textContent = `Update available: ${info.latestTag}`;
+
+    const description = document.createElement("p");
+    description.textContent = `You are on ${CURRENT_DISPLAY_VERSION}. A newer GitHub Release is available for download.`;
+
+    const actions = document.createElement("div");
+    actions.className = "iref-update-note-actions";
+
+    const helpText = document.createElement("span");
+    helpText.textContent =
+      "Download the latest release zip, extract it, then reload the unpacked extension.";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "iref-secondary-btn";
+    button.textContent = "Open latest release";
+    button.addEventListener("click", handleOpenLatestRelease);
+
+    actions.append(helpText, button);
+    note.append(title, description, actions);
+  };
 
   const handleChange = (e) => {
     if (e.target.type === "checkbox") {
@@ -37,13 +129,13 @@ async function initSettingsPanel(activate = true) {
   };
 
   const handleSave = (e) => {
-    localStorage.setItem("iref_settings", JSON.stringify(settings));
+    settings = saveSettings(settings);
     features.rerunAll();
     handleClose();
   };
 
   const settingsPanelEl = (
-    <div id="update-content-modal-modal-content" class="modal-content">
+    <div id="iref-settings-panel-content" class="modal-content">
       <div class="modal-header">
         <a class="close" onClick={handleClose}>
           <i class="icon-cancel"></i>
@@ -98,6 +190,14 @@ async function initSettingsPanel(activate = true) {
                   <h1 class="m-b-1">
                     <strong>Settings</strong>
                   </h1>
+                  <p class="m-b-1">
+                    This browser build focuses on members-ng UI helpers. Launching
+                    and joining sessions still hand off to the local iRacing app.
+                  </p>
+                  <div id="iref-update-note" class="iref-update-note hidden"></div>
+                  <h4 class="m-b-1">
+                    <strong>Experimental Web Tools</strong>
+                  </h4>
                   <label htmlFor="" class="iref-setting">
                     <i
                       class="icon-information text-info"
@@ -114,9 +214,9 @@ async function initSettingsPanel(activate = true) {
                   <label htmlFor="" class="iref-setting">
                     <i
                       class="icon-information text-info"
-                      title="Adds download and upload buttons to the session settings window so that session setup can be shared using .json"
+                      title="Adds import and export buttons to the Hosted and League create-race wizard so session setup can be shared using .json. Weather tools are temporarily hidden."
                     ></i>
-                    Hosted/League session sharing buttons
+                    Hosted/League session tools
                     <input
                       type="checkbox"
                       name="share-hosted-session"
@@ -127,7 +227,7 @@ async function initSettingsPanel(activate = true) {
                   <label htmlFor="" class="iref-setting">
                     <i
                       class="icon-information text-info"
-                      title="Adds queue buttons to future races to automatically register to them when available. You must select a car to queue with. Will forfeit/withdraw your current session when queued session becomes available. To reset your queue restart the UI."
+                      title="Adds queue buttons to the next race card and session list to automatically register when the matching race session appears. You must select a car to queue with. Clicking an active queue button again removes it."
                     ></i>
                     Queue system for future sessions
                     <input
@@ -137,6 +237,62 @@ async function initSettingsPanel(activate = true) {
                       onChange={handleChange}
                     />
                   </label>
+                  <label htmlFor="" class="iref-setting">
+                    <i
+                      class="icon-information text-info"
+                      title="When enabled, queueing a multiclass series without a saved car will ask which car to use. When disabled, queueing without a car selection shows 'Choose a car!' instead."
+                    ></i>
+                    Prompt for car when queueing
+                    <input
+                      type="checkbox"
+                      name="queue-car-prompt"
+                      checked={settings["queue-car-prompt"]}
+                      onChange={handleChange}
+                    />
+                  </label>
+                  <label htmlFor="" class="iref-setting">
+                    <i
+                      class="icon-information text-info"
+                      title="Play a short sound when a queued race finally sends its register request."
+                    ></i>
+                    Queue register sound
+                    <input
+                      type="checkbox"
+                      name="queue-register-sound"
+                      checked={settings["queue-register-sound"]}
+                      onChange={handleChange}
+                    />
+                  </label>
+                  <label htmlFor="" class="iref-setting">
+                    <i
+                      class="icon-information text-info"
+                      title="Adjust the queue register sound volume from 0 to 100."
+                    ></i>
+                    Queue sound volume
+                    <input
+                      type="number"
+                      name="queue-register-sound-volume"
+                      min="0"
+                      max="100"
+                      value={settings["queue-register-sound-volume"] ?? 65}
+                      onChange={handleChange}
+                    />
+                    %
+                  </label>
+                  <div class="iref-setting iref-setting-actions">
+                    <i
+                      class="icon-information text-info"
+                      title="Play the current queue register sound using the configured volume."
+                    ></i>
+                    Test queue sound
+                    <button
+                      type="button"
+                      class="iref-secondary-btn"
+                      onClick={handleTestSound}
+                    >
+                      Test sound
+                    </button>
+                  </div>
                   <label htmlFor="" class="iref-setting">
                     <i
                       class="icon-information text-info"
@@ -150,54 +306,13 @@ async function initSettingsPanel(activate = true) {
                       onChange={handleChange}
                     />
                   </label>
-                  <label htmlFor="" class="iref-setting">
-                    <i
-                      class="icon-information text-info"
-                      title="Automatically launch the sim for all or official race only sessions. Doesn't work well with official sessions that don't go official (low attendance)."
-                    ></i>
-                    Auto join
-                    <select name="auto-join-type" onChange={handleChange}>
-                      <option
-                        value="race"
-                        selected={settings["auto-join-type"] == "race"}
-                      >
-                        scored
-                      </option>
-                      <option
-                        value="all"
-                        selected={settings["auto-join-type"] == "all"}
-                      >
-                        all
-                      </option>
-                    </select>
-                    sessions
-                    <input
-                      type="checkbox"
-                      name="auto-join"
-                      checked={settings["auto-join"]}
-                      onChange={handleChange}
-                    />
-                  </label>
-                  <label htmlFor="" class="iref-setting">
-                    <i
-                      class="icon-information text-info"
-                      title="Automatically forfeit official race sessions. Only activates if the sim is running. Recommended to not forfeit before warmup and quali is complete."
-                    ></i>
-                    Auto forfeit after
-                    <input
-                      type="number"
-                      name="auto-forfeit-m"
-                      value={settings["auto-forfeit-m"] || 13}
-                      onChange={handleChange}
-                    />
-                    minutes
-                    <input
-                      type="checkbox"
-                      name="auto-forfeit"
-                      checked={settings["auto-forfeit"]}
-                      onChange={handleChange}
-                    />
-                  </label>
+                  <p class="m-b-1">
+                    Desktop-only features such as auto join and auto forfeit are
+                    disabled in the browser build.
+                  </p>
+                  <h4 class="m-b-1">
+                    <strong>Browser UI Tweaks</strong>
+                  </h4>
                   <label htmlFor="" class="iref-setting">
                     <i
                       class="icon-information text-info"
@@ -292,7 +407,7 @@ async function initSettingsPanel(activate = true) {
               class="btn btn-md btn-secondary"
               onClick={handleReload}
             >
-              Reload without iRef
+              Reload page
             </a>
           </div>
           <div class="pull-xs-right">
@@ -314,22 +429,32 @@ async function initSettingsPanel(activate = true) {
   );
 
   const handleClick = (e) => {
-    $("#menubar-right > span:nth-child(4) button").click();
+    const overlay = ensureOverlay();
+    const dialog = $("#iref-settings-dialog");
+    const body = $("body");
 
-    let waitForSettings = setInterval(() => {
-      if ($("#update-content-modal-modal-dialog")) {
-        clearInterval(waitForSettings);
-        $("#update-content-modal-modal-dialog").innerHTML = "";
-        $("#update-content-modal-modal-dialog").appendChild(settingsPanelEl);
-        $("body").classList.add("iref-settings-panel-open");
-      }
-    }, 100);
+    if (!overlay || !dialog) {
+      return;
+    }
+
+    dialog.innerHTML = "";
+    dialog.appendChild(settingsPanelEl);
+    overlay.classList.add("open");
+    renderUpdateNote(updateInfo);
+    checkForUpdates({ force: true }).then((info) => {
+      updateInfo = info;
+      renderUpdateNote(info);
+    });
+
+    if (body) {
+      body.classList.add("iref-settings-panel-open");
+    }
   };
 
   const menuButtonEl = (
     <button
       type="button"
-      className="iref-toolbar-btn"
+      className="iref-toolbar-btn iref-settings-trigger"
       aria-label="iRefined"
       tabindex="0"
       onClick={handleClick}
@@ -351,23 +476,20 @@ async function initSettingsPanel(activate = true) {
         <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
         <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
       </svg>
+      <span>iRefined</span>
     </button>
   );
 
-  $(".iref-bar-right").appendChild(menuButtonEl);
+  if (!$(".iref-settings-trigger")) {
+    const toolbar = $(".iref-bar-right");
 
-  const plausibleEl = (
-    <script
-      defer
-      data-domain="iracing.com"
-      src="https://plausible.jsn256.com/js/script.js"
-    ></script>
-  );
-
-  $("body").appendChild(plausibleEl);
+    if (toolbar) {
+      toolbar.appendChild(menuButtonEl);
+    }
+  }
 }
 
-const id = getFeatureID(import.meta.url);
+const id = "settings-panel";
 const bodyClass = "iref-" + id;
 const selector = "body";
 

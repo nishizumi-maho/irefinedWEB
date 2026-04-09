@@ -1,5 +1,5 @@
-import { getFeatureID } from "../helpers/feature-helpers.js";
 import features from "../feature-manager.js";
+import { getSettings } from "../helpers/settings.js";
 import { $ } from "select-dom";
 import { log } from "./logger.js";
 
@@ -10,8 +10,7 @@ async function init(activate = true) {
     return;
   }
 
-  let timeout =
-    JSON.parse(localStorage.getItem("iref_settings"))["toast-timeout-s"] || 5;
+  const timeout = getSettings()["toast-timeout-s"] || 5;
 
   let toastEl = $(selector);
 
@@ -27,7 +26,7 @@ async function init(activate = true) {
   }, timeout * 1000);
 }
 
-const id = getFeatureID(import.meta.url);
+const id = "auto-close-toasts";
 const bodyClass = "iref-" + id;
 
 features.add(id, true, selector, bodyClass, init);

@@ -1,16 +1,16 @@
 {
   "name": "extension",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "displayVersion": "v1",
+  "repository": "https://github.com/nishizumi-maho/irefinedWEB",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "serve": "http-server dist --cors"
+    "preview": "vite preview"
   },
   "devDependencies": {
-    "http-server": "^14.1.1",
     "vite": "^6.1.0",
     "vite-plugin-static-copy": "^2.2.0"
   },

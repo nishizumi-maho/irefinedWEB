@@ -1,19 +1,55 @@
-.iref-no-sidebars .iref-toolbar-btn {
-  right: 11px;
-}
-
 .iref-toolbar-btn {
   background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
   background-size: 400% 400%;
   animation: iref-settings-panel-icon-gradient 15s ease infinite;
   height: 32px;
-  width: 32px;
-  border-radius: 50%;
-  margin-right: 4px;
+  padding: 0 12px;
+  border-radius: 999px;
+  margin-right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  border: 0;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+  white-space: nowrap;
+}
 
-  svg {
-    transform: translateX(5px);
-  }
+.iref-toolbar-btn svg {
+  flex-shrink: 0;
+}
+
+.iref-settings-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 10001;
+}
+
+.iref-settings-overlay.open {
+  display: block;
+}
+
+.iref-settings-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 5, 15, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.iref-settings-dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  z-index: 1;
 }
 
 .iref-setting {
@@ -29,7 +65,7 @@
 
   input[type="number"] {
     display: inline-block;
-    width: 35px;
+    width: 52px;
     color: white;
     background: var(--ir-colors-gray-900);
     font-size: 16px;
@@ -56,6 +92,27 @@
       background-color: black;
     }
   }
+}
+
+.iref-setting-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.iref-secondary-btn {
+  margin-left: auto;
+  padding: 6px 12px;
+  border: 1px solid #4a5977;
+  border-radius: 999px;
+  background: rgba(30, 44, 74, 0.85);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.iref-secondary-btn:hover {
+  background: rgba(46, 66, 110, 0.95);
 }
 
 @keyframes iref-settings-panel-icon-gradient {

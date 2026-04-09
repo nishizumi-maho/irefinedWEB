@@ -1,4 +1,3 @@
-import { getFeatureID } from '../helpers/feature-helpers.js';
 import features from '../feature-manager.js';
 import { findReact } from '../helpers/react-resolver.js';
 import React from 'dom-chef';
@@ -82,7 +81,7 @@ async function initConditions(activate = true) {
 
 }
 
-const id = getFeatureID(import.meta.url);
+const id = "share-test-session";
 const bodyClass = 'iref-' + id;
 
 features.add(id, true, selector, bodyClass, initConditions);

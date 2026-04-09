@@ -4,6 +4,10 @@ import { elementExists } from "select-dom";
 let watch_list = [];
 
 setInterval(() => {
+  if (!document.body) {
+    return;
+  }
+
   for (var i = 0; i < watch_list.length; i++) {
     let exists = elementExists(watch_list[i].selector);
 

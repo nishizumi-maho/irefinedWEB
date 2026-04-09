@@ -1,5 +1,6 @@
 import { log } from "./features/logger.js";
 import observe from "./helpers/dom-observer.js";
+import { getSettings } from "./helpers/settings.js";
 
 let registeredFeatures = [];
 
@@ -8,7 +9,7 @@ async function add(id, observer, selector, bodyClass, callback = null) {
   registeredFeatures.push({ id, observer, selector, bodyClass, callback });
 
   /* Feature filtering and running */
-  const options = JSON.parse(localStorage.getItem("iref_settings"));
+  const options = getSettings();
 
   let enabled = false;
 
@@ -16,7 +17,9 @@ async function add(id, observer, selector, bodyClass, callback = null) {
   if (
     (options && options[id] === true) ||
     id === "settings-panel" ||
-    id === "status-bar"
+    id === "status-bar" ||
+    id === "update-notice" ||
+    id === "go-racing-export"
   ) {
     //log(`✅ Enabled feature: ${id}`);
     enabled = true;

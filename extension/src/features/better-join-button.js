@@ -1,4 +1,3 @@
-import { getFeatureID } from "../helpers/feature-helpers.js";
 import features from "../feature-manager.js";
 import { findProps } from "../helpers/react-resolver.js";
 import { $ } from "select-dom";
@@ -21,6 +20,10 @@ async function init(activate = true) {
 
   persistInterval = setInterval(() => {
     let joinBtnEl = $(selector);
+
+    if (!joinBtnEl) {
+      return;
+    }
 
     if (joinBtnEl.classList.contains("iref-seen")) {
       return;
@@ -51,8 +54,7 @@ async function init(activate = true) {
       }
     }
 
-    //joinBtnEl.innerHTML = label1 == "Race" ? label1 + label2 : label1;
-    joinBtnEl.innerHTML = label1;
+    joinBtnEl.textContent = label1;
 
     const joinSeriesLabel =
       window.irefIndex &&
@@ -60,13 +62,15 @@ async function init(activate = true) {
         ? window.irefIndex[joinProps.registrationStatus.season_id]
         : false;
 
-    if (joinSeriesLabel) {
-      $(".chakra-text.css-1ap4k1m").innerText = joinSeriesLabel;
+    const seriesLabelEl = $(".chakra-text.css-1ap4k1m");
+
+    if (joinSeriesLabel && seriesLabelEl) {
+      seriesLabelEl.innerText = joinSeriesLabel;
     }
   }, 300);
 }
 
-const id = getFeatureID(import.meta.url);
+const id = "better-join-button";
 const bodyClass = "iref-" + id;
 
 features.add(id, true, selector, bodyClass, init);

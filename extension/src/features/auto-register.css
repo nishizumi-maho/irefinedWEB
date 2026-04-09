@@ -1,17 +1,141 @@
 .iref-queue-btn {
-  background-color: #cd00cd !important;
-  color: white !important;
-  width: 110px !important;
-  text-align: center !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(23, 32, 58, 0.95);
+  color: #f5f7ff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    opacity 120ms ease;
+}
+
+.iref-queue-btn:hover {
+  background: rgba(46, 76, 155, 0.95);
+}
+
+.iref-queue-btn-inline {
+  min-height: 36px;
+  width: 100%;
+}
+
+.iref-session-queue-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.iref-session-view-hidden {
+  display: none !important;
+}
+
+.iref-queue-btn-queued {
+  background: rgba(98, 114, 154, 0.95);
+  border-color: rgba(157, 171, 204, 0.45);
+}
+
+.iref-queue-btn-found {
+  background: rgba(0, 112, 228, 0.95);
+  border-color: rgba(121, 190, 255, 0.6);
+}
+
+.iref-queue-btn-registering {
+  background: rgba(0, 137, 73, 0.95);
+  border-color: rgba(107, 232, 157, 0.6);
+  cursor: progress;
 }
 
 .iref-queue-btn.danger {
-  background-color: red !important;
+  background: rgba(174, 35, 59, 0.95);
+  border-color: rgba(255, 134, 147, 0.55);
 }
 
-.iref-disabled {
-  pointer-events: none !important;
-  background-color: #aaa !important;
+.iref-native-action-hidden {
+  display: none !important;
+}
+
+.iref-top-action-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.iref-series-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    opacity 120ms ease;
+}
+
+.iref-series-action-btn:hover {
+  opacity: 0.94;
+}
+
+.iref-series-action-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.iref-series-action-primary {
+  flex: 1 1 0;
+}
+
+.iref-series-action-primary.is-register {
+  background: linear-gradient(180deg, rgba(33, 103, 46, 0.98), rgba(24, 78, 33, 0.98));
+  border-color: rgba(120, 231, 150, 0.45);
+  color: #effff3;
+}
+
+.iref-series-action-primary.is-withdraw {
+  background: linear-gradient(180deg, rgba(168, 42, 51, 0.98), rgba(131, 28, 36, 0.98));
+  border-color: rgba(255, 140, 153, 0.45);
+  color: #fff1f3;
+}
+
+.iref-series-action-primary.is-registering {
+  box-shadow: inset 0 0 0 1px rgba(255, 220, 125, 0.35);
+}
+
+.iref-series-action-primary.is-elsewhere,
+.iref-series-action-primary.is-unavailable {
+  background: rgba(61, 66, 84, 0.96);
+  border-color: rgba(148, 156, 185, 0.32);
+  color: rgba(236, 240, 255, 0.8);
+}
+
+.iref-series-action-secondary {
+  flex: 0 0 auto;
+  background: rgba(23, 32, 58, 0.95);
+  color: #f5f7ff;
+}
+
+.iref-series-action-secondary:hover {
+  background: rgba(46, 76, 155, 0.95);
+}
+
+.iref-top-queue-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .iref-auto-register {

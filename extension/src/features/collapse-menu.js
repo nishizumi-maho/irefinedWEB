@@ -1,8 +1,7 @@
-import { getFeatureID } from '../helpers/feature-helpers.js';
 import features from '../feature-manager.js';
 import './collapse-menu.css';
 
-const id = getFeatureID(import.meta.url);
+const id = "collapse-menu";
 
 const selector = '#racing-sidebar';
 

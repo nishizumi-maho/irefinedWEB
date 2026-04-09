@@ -1,0 +1,52 @@
+.iref-update-btn {
+  margin-right: 8px;
+  padding: 0 12px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 196, 90, 0.35);
+  background: linear-gradient(180deg, rgba(120, 72, 18, 0.98), rgba(95, 54, 11, 0.98));
+  color: #fff4d7;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.iref-update-btn:hover {
+  filter: brightness(1.04);
+}
+
+.iref-update-btn.hidden {
+  display: none;
+}
+
+.iref-update-note {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 196, 90, 0.28);
+  border-radius: 12px;
+  background: rgba(86, 50, 10, 0.35);
+  color: #ffeec9;
+}
+
+.iref-update-note.hidden {
+  display: none;
+}
+
+.iref-update-note strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.iref-update-note p {
+  margin: 0;
+  color: rgba(255, 238, 201, 0.88);
+}
+
+.iref-update-note-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
