@@ -31,29 +31,24 @@ jobs:
         run: npm run build
         working-directory: extension
 
-      - name: Read release label
-        id: version
-        run: |
-          echo "value=$(node -e 'const fs = require(\"fs\"); const manifest = JSON.parse(fs.readFileSync(\"extension/public/manifest.json\", \"utf8\")); process.stdout.write(manifest.version_name || manifest.version);')" >> "$GITHUB_OUTPUT"
-
       - name: Package Chromium release zip
         run: |
-          VERSION="${{ steps.version.outputs.value }}"
-          PACKAGE_DIR="release/irefined-browser-chromium-v$VERSION"
+          VERSION="${{ github.event.release.tag_name }}"
+          PACKAGE_DIR="release/irefined-browser-chromium-$VERSION"
           mkdir -p "$PACKAGE_DIR"
           cp -R extension/dist/. "$PACKAGE_DIR/"
           cd release
-          zip -r "irefined-browser-chromium-v$VERSION.zip" "irefined-browser-chromium-v$VERSION"
+          zip -r "irefined-browser-chromium-$VERSION.zip" "irefined-browser-chromium-$VERSION"
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: irefined-browser-chromium-v${{ steps.version.outputs.value }}
-          path: release/irefined-browser-chromium-v${{ steps.version.outputs.value }}.zip
+          name: irefined-browser-chromium-${{ github.event.release.tag_name }}
+          path: release/irefined-browser-chromium-${{ github.event.release.tag_name }}.zip
 
       - name: Attach asset to GitHub Release
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ github.event.release.tag_name }}" "release/irefined-browser-chromium-v${{ steps.version.outputs.value }}.zip" --clobber
+          gh release upload "${{ github.event.release.tag_name }}" "release/irefined-browser-chromium-${{ github.event.release.tag_name }}.zip" --clobber
