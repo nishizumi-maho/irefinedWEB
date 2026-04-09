@@ -132,7 +132,7 @@ Known limitations:
 
 - joining a session still depends on whatever action the site exposes, which usually hands off to the local iRacing app
 - launching the sim is still local-app behavior
-- weather import/export is currently hidden while it is being reworked
+- weather import/export is currently hidden while it is being reworked, use the session import/export as a workaround (the weather feature works there!)
 - some UI placements on `members-ng` may break whenever iRacing changes the site layout
 
 In practice:
