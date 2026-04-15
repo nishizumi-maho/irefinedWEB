@@ -39,9 +39,9 @@ Quick notes:
 
 This repository is a browser-focused fork/adaptation of the original `iRefined` project. The old desktop launcher flow is intentionally removed here. This build targets the website at `https://members-ng.iracing.com/web/*` and does not try to inject into the installed iRacing UI.
 
-## V2 Experimental Release
+## V2 Release
 
-V2 is an experimental release focused on making the browser-side Official session workflow easier to use from the iRacing `members-ng` pages.
+V2 is the current release focused on making the browser-side Official session workflow easier to use from the iRacing `members-ng` pages.
 
 Main changes since V1:
 
@@ -56,6 +56,14 @@ Main changes since V1:
 - Improved registration state refresh after browser-side register and withdraw actions.
 - Added smarter queue handoff: if a queued session becomes registerable while you are already registered somewhere else, the extension withdraws the current registration before registering the queued session.
 - Added the advanced `Re-queue displaced registration` setting, disabled by default. When enabled, a displaced existing registration can be kept queued after switching into a nearer queued session.
+
+Critical fixes already rolled into this V2 release:
+
+- Restored the queue registration flow for race and qualify sessions when the site exposes a session id before the automatic 5-minute register window.
+- Synced the bottom queue bar countdown with the main `Next Race` countdown so both timers use the same clock reference.
+- Fixed local withdraw from the top status bar so the main central action updates immediately after the withdraw request.
+- Fixed session row deduplication so some users no longer see only a single future race when iRacing reuses a raw `session_id`.
+- Added `(R)` and `(Q)` markers in the queue bar so scheduled race and qualify items are easy to distinguish.
 
 ## ✨ At A Glance
 

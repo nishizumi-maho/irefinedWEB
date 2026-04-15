@@ -16,6 +16,8 @@ const autoRegisterGraceMs = 15 * 60 * 1000;
 const queueRetentionMs = 12 * 60 * 60 * 1000;
 const queueWithdrawRetryDelayMs = 2500;
 const queueRegisterDelayMs = 7000;
+const maxClockSyncSkewMs = 2 * 60 * 60 * 1000;
+const optimisticWithdrawWindowMs = 15 * 1000;
 const raceEventType = 5;
 const qualifyEventType = 3;
 const practiceEventType = 2;
@@ -144,11 +146,48 @@ export function clearRegistrationState() {
   localStorage.removeItem(registrationStorageKey);
 }
 
+function getPendingWithdrawState() {
+  const pendingWithdrawState = window.irefPendingWithdrawState;
+
+  if (
+    !pendingWithdrawState ||
+    !pendingWithdrawState.expires_at ||
+    pendingWithdrawState.expires_at <= Date.now()
+  ) {
+    window.irefPendingWithdrawState = null;
+    return null;
+  }
+
+  return pendingWithdrawState;
+}
+
+function markCurrentPageWithdrawPending() {
+  window.irefPendingWithdrawState = {
+    path: location.pathname,
+    expires_at: Date.now() + optimisticWithdrawWindowMs,
+  };
+}
+
+function clearCurrentPageWithdrawPending() {
+  window.irefPendingWithdrawState = null;
+}
+
+export function isCurrentPageWithdrawPending() {
+  const pendingWithdrawState = getPendingWithdrawState();
+
+  if (!pendingWithdrawState) {
+    return false;
+  }
+
+  return pendingWithdrawState.path === location.pathname;
+}
+
 export function getCurrentRegistrationState() {
   return getRegistrationState();
 }
 
 export function confirmRegistrationState(extra = {}) {
+  clearCurrentPageWithdrawPending();
   const currentState = getRegistrationState();
 
   if (!currentState) {
@@ -175,8 +214,96 @@ function queueKey(queueItem) {
   return `${queueItem.season_id}:${getQueueEventType(queueItem)}:${new Date(queueItem.start_time).toISOString()}`;
 }
 
-function getCurrentTime() {
-  return Date.now();
+function getCurrentTimeOffset() {
+  const offset = Number(window.irefCurrentTimeOffsetMs);
+  return Number.isFinite(offset) ? offset : 0;
+}
+
+function setCurrentTimeOffset(offsetMs) {
+  if (!Number.isFinite(offsetMs) || Math.abs(offsetMs) > maxClockSyncSkewMs) {
+    return getCurrentTimeOffset();
+  }
+
+  const normalizedOffsetMs = Math.round(offsetMs / 1000) * 1000;
+  window.irefCurrentTimeOffsetMs = normalizedOffsetMs;
+  return normalizedOffsetMs;
+}
+
+function parseCountdownTextToMs(text = "") {
+  const normalized = normalizeSearchText(text);
+
+  if (!normalized) {
+    return null;
+  }
+
+  const clockMatch = normalized.match(/(\d{1,2}:\d{2}(?::\d{2})?)/);
+
+  if (clockMatch) {
+    const parts = clockMatch[1].split(":").map((part) => parseInt(part, 10));
+
+    if (parts.some((part) => Number.isNaN(part))) {
+      return null;
+    }
+
+    if (parts.length === 3) {
+      const [hours, minutes, seconds] = parts;
+      return ((hours * 60 * 60) + (minutes * 60) + seconds) * 1000;
+    }
+
+    const [minutes, seconds] = parts;
+    return ((minutes * 60) + seconds) * 1000;
+  }
+
+  const daysMatch = normalized.match(/(\d+)\s*d(?:ays?)?/);
+  const hoursMatch = normalized.match(/(\d+)\s*h(?:rs?|ours?)?/);
+  const minutesMatch = normalized.match(/(\d+)\s*m(?:ins?|inutes?)?/);
+  const secondsMatch = normalized.match(/(\d+)\s*s(?:ecs?|econds?)?/);
+
+  if (!daysMatch && !hoursMatch && !minutesMatch && !secondsMatch) {
+    return null;
+  }
+
+  const days = parseInt(daysMatch?.[1] || "0", 10);
+  const hours = parseInt(hoursMatch?.[1] || "0", 10);
+  const minutes = parseInt(minutesMatch?.[1] || "0", 10);
+  const seconds = parseInt(secondsMatch?.[1] || "0", 10);
+
+  return (
+    (((days * 24) + hours) * 60 * 60) +
+    (minutes * 60) +
+    seconds
+  ) * 1000;
+}
+
+function extractNextRaceCountdownMs(section) {
+  if (!section) {
+    return null;
+  }
+
+  const lines = getTextLines(section.innerText || "");
+  const countdownLine = lines.find((line) => /(Open Now|Opens Soon)$/i.test(line));
+
+  if (!countdownLine) {
+    return null;
+  }
+
+  return parseCountdownTextToMs(countdownLine);
+}
+
+function syncCurrentTimeOffset(section, sessionProps) {
+  const startTime = new Date(sessionProps?.session?.start_time).getTime();
+  const countdownMs = extractNextRaceCountdownMs(section);
+
+  if (Number.isNaN(startTime) || countdownMs === null) {
+    return false;
+  }
+
+  setCurrentTimeOffset(startTime - countdownMs - Date.now());
+  return true;
+}
+
+export function getCurrentTime() {
+  return Date.now() + getCurrentTimeOffset();
 }
 
 function canDirectRegisterSession(sessionPropsOrSession = {}) {
@@ -272,12 +399,7 @@ function loadQueue() {
             event_type_name: item.event_type_name || "Race",
             registration_open: item.registration_open === true,
             start_time: startTime.toISOString(),
-            status:
-              item.status === "found" &&
-              item.session_id &&
-              item.registration_open === true
-                ? "found"
-                : "queued",
+            status: item.status === "found" && item.session_id ? "found" : "queued",
             session_id: item.session_id ?? null,
             subsession_id: item.subsession_id ?? null,
             created_at: item.created_at || new Date().toISOString(),
@@ -1169,12 +1291,6 @@ function markQueueItemFound(queueItem, session) {
   queueItem.session_id = session.session_id;
   queueItem.subsession_id = session.subsession_id ?? null;
   queueItem.registration_open = canDirectRegisterSession(session);
-
-  if (!queueItem.registration_open) {
-    persistQueue();
-    return false;
-  }
-
   queueItem.status = "found";
   queueItem.last_found_at = new Date().toISOString();
   persistQueue();
@@ -1182,10 +1298,7 @@ function markQueueItemFound(queueItem, session) {
 }
 
 function canQueueItemRegisterNow(queueItem) {
-  if (
-    queueItem?.registration_open !== true ||
-    !isInsideQueueRegisterWindow(queueItem.start_time)
-  ) {
+  if (!queueItem?.session_id) {
     return false;
   }
 
@@ -1228,10 +1341,6 @@ function resolveImmediateQueueSession(sessionProps, slot, section) {
 
 function updateQueueReadiness(queueItem, session = null) {
   if (!queueItem || queueItem.status !== "queued") {
-    return false;
-  }
-
-  if (!canQueueItemRegisterNow(queueItem)) {
     return false;
   }
 
@@ -1498,16 +1607,32 @@ function getSessionButtonEntries(section, options = {}) {
       ),
     }))
     .filter(({ props }) => {
-      const sessionId =
-        props?.session?.session_id ||
-        props?.session?.subsession_id ||
-        props?.session?.start_time;
-
-      if (!props?.session || !sessionId || seen.has(sessionId)) {
+      if (!props?.session) {
         return false;
       }
 
-      seen.add(sessionId);
+      const seasonId = props.contentId ?? props.session.season_id ?? "";
+      const eventType =
+        getSessionEventType(props.session) ?? props.session.event_type_name ?? "";
+      const startTime = props.session.start_time
+        ? new Date(props.session.start_time).toISOString()
+        : "";
+      const sessionKey =
+        seasonId !== "" && startTime
+          ? `${seasonId}|${eventType}|${startTime}`
+          : [
+              seasonId,
+              eventType,
+              props.session.subsession_id ?? "",
+              props.session.session_id ?? "",
+              startTime,
+            ].join("|");
+
+      if (!sessionKey || seen.has(sessionKey)) {
+        return false;
+      }
+
+      seen.add(sessionKey);
       return true;
     });
 }
@@ -1573,6 +1698,13 @@ function getDirectRegisterMode(section, sessionProps) {
   const seasonName = sessionProps?.session?.season_name || "";
   const nativeWithdraw = findNativeWithdrawAction();
   const optimisticMode = section?.dataset?.irefRegistrationMode || "";
+
+  if (isCurrentPageWithdrawPending()) {
+    return {
+      mode: "register",
+      registrationState: null,
+    };
+  }
 
   if (optimisticMode === "withdraw") {
     return {
@@ -1813,6 +1945,7 @@ function startRegistrationFlow(registrationState, labels = {}, handlers = {}, op
 }
 
 function sendDirectRegister(registerableProps, selectedCar) {
+  clearCurrentPageWithdrawPending();
   if (!canDirectRegisterSession(registerableProps)) {
     log("🚫 This page did not expose a registerable session id yet");
     return false;
@@ -1830,7 +1963,52 @@ function sendDirectRegister(registerableProps, selectedCar) {
   );
 }
 
-function sendDirectWithdraw() {
+function setCurrentPageRegistrationMode(mode = "") {
+  const nextRaceSection = findNextRaceSection();
+
+  if (!nextRaceSection) {
+    return false;
+  }
+
+  if (mode) {
+    nextRaceSection.dataset.irefRegistrationMode = mode;
+  } else {
+    delete nextRaceSection.dataset.irefRegistrationMode;
+  }
+
+  return true;
+}
+
+function syncCurrentPageRegistrationUi() {
+  const nextRaceSection = findNextRaceSection();
+  const nextRace = nextRaceSection ? findNextRaceProps(nextRaceSection) : null;
+
+  if (!nextRaceSection || !nextRace) {
+    return false;
+  }
+
+  syncCurrentTimeOffset(nextRaceSection, nextRace.props);
+  ensureDirectRegisterButtons(nextRaceSection, nextRace.props);
+  ensureTopQueueButtons(nextRaceSection, nextRace.props);
+  return true;
+}
+
+function scheduleLocalWithdrawRefresh() {
+  window.setTimeout(() => {
+    ws.refreshNow();
+    syncCurrentPageRegistrationUi();
+  }, 250);
+  window.setTimeout(() => {
+    ws.refreshNow();
+    syncCurrentPageRegistrationUi();
+  }, 1200);
+  window.setTimeout(() => {
+    ws.refreshNow();
+    syncCurrentPageRegistrationUi();
+  }, 3500);
+}
+
+export function requestCurrentSessionWithdraw() {
   const sent = tryWithdrawCurrentSession();
 
   if (!sent) {
@@ -1839,8 +2017,16 @@ function sendDirectWithdraw() {
   }
 
   clearRegistrationState();
+  markCurrentPageWithdrawPending();
+  setCurrentPageRegistrationMode("register");
+  syncCurrentPageRegistrationUi();
+  scheduleLocalWithdrawRefresh();
   log("✅ Sent withdraw request");
   return true;
+}
+
+function sendDirectWithdraw() {
+  return requestCurrentSessionWithdraw();
 }
 
 function handleDirectRegister(button, section, sessionProps, registerableProps) {
@@ -2179,13 +2365,18 @@ function canAttemptRegistration(queueItem) {
   if (
     !queueItem.session_id ||
     !queueItem.car_id ||
-    !queueItem.car_class_id ||
-    queueItem.registration_open !== true
+    !queueItem.car_class_id
   ) {
     return false;
   }
 
-  return true;
+  const startTime = new Date(queueItem.start_time).getTime();
+
+  if (Number.isNaN(startTime)) {
+    return false;
+  }
+
+  return startTime >= getCurrentTime() - autoRegisterGraceMs;
 }
 
 export function activateQueueItem(queueIndex, options = {}) {
@@ -2316,15 +2507,15 @@ window.setInterval(() => {
   }
 
   ensureWatchQueue().forEach((queueItem, queueIndex) => {
-    if (
-      queueItem.status === "queued" &&
-      queueItem.session_id &&
-      canQueueItemRegisterNow(queueItem)
-    ) {
+    if (queueItem.status === "queued" && queueItem.session_id) {
       updateQueueReadiness(queueItem);
     }
 
-    if (queueItem.status === "found" && isInsideQueueRegisterWindow(queueItem.start_time)) {
+    if (
+      queueItem.status === "found" &&
+      canQueueItemRegisterNow(queueItem) &&
+      isInsideQueueRegisterWindow(queueItem.start_time)
+    ) {
       activateQueueItem(queueIndex, { manual: false });
     }
   });
@@ -2350,6 +2541,7 @@ async function init(activate = true) {
       const nextRace = findNextRaceProps(nextRaceSection);
 
       if (nextRace) {
+        syncCurrentTimeOffset(nextRaceSection, nextRace.props);
         ensureDirectRegisterButtons(nextRaceSection, nextRace.props);
         ensureTopQueueButtons(nextRaceSection, nextRace.props);
       }

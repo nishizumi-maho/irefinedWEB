@@ -1,31 +1,35 @@
-# V2 Experimental Release
+# V2 Release
 
-This is an experimental release of iRefined Browser focused on the Official session registration and queue workflow on the iRacing `members-ng` website.
+This V2 release consolidates the original V2 work and the follow-up critical fixes that were previously split out separately. This is now the canonical V2 release and should be published as the latest stable release for the browser extension.
 
 ## Changelog
 
-- Added queue buttons for upcoming race sessions, including rows that normally expose only `View in iRacing`.
-- Added queue support for qualifying sessions.
-- Kept the top session card focused on the direct registration state: `Register`, `Withdraw`, `Registered elsewhere`, or `Queue for the next race` when direct registration is not available.
-- Hid the top-card `View in iRacing` button in the new registration/queue states to make the primary action clearer.
-- Added the currently open race session to the `Race Queue` upcoming session buttons, so users can queue it even when the top card offers direct registration.
-- Removed queue buttons from the `Currently Racing` driver table and restored the native `View in iRacing` behavior there.
-- Added direct green `Register` buttons for practice sessions only when `members-ng` exposes a valid registerable practice session id.
-- Improved queue handoff when the user is already registered elsewhere: when a queued session becomes registerable, the extension withdraws the current registration before registering the queued session.
-- Added the advanced `Re-queue displaced registration` setting, disabled by default. When enabled, the extension can keep the displaced registration queued after switching to a nearer queued session.
-- Improved registration state refresh after browser-side register and withdraw actions.
-- Updated V2 metadata in `package.json`, `package-lock.json`, and `manifest.json`.
-- Updated README documentation for V2 behavior, settings, installation, and limitations.
+### Added
 
-## Notes
+- Queue buttons for upcoming race sessions, including rows that normally expose only `View in iRacing`.
+- Queue support for qualifying sessions.
+- A clearer top-card workflow that keeps direct `Register` and `Withdraw` visible while exposing separate race and qualify queue actions below.
+- Direct practice `Register` buttons only when `members-ng` exposes a valid registerable practice session id.
+- The advanced `Re-queue displaced registration` setting, disabled by default, to keep a displaced registration queued after switching to a nearer queued session.
+- `(R)` and `(Q)` tags in the bottom queue bar so scheduled race and qualify entries are easy to identify.
 
-- This release remains a browser-only helper layer for the public iRacing `members-ng` website.
-- Queue/register behavior depends on the session ids and registration state exposed by `members-ng`.
-- Practice registration is only added where the site exposes the required direct registration data.
-- This release should be published as a GitHub pre-release while the expanded queue behavior is validated.
+### Changed
+
+- The top session card now stays focused on the primary action for the current session, while upcoming sessions remain queueable from the dedicated queue areas.
+- `Register unavailable` on supported race cards was replaced with `Queue for the next race` when the site has not opened a valid direct registration target yet.
+- `Currently Racing` keeps the native `View in iRacing` action instead of showing queue buttons.
+
+### Fixed
+
+- Restored the queue registration flow for race and qualify sessions when the site exposes a session id before the automatic 5-minute register window.
+- Synced the bottom queue bar countdown with the `Next Race` countdown to prevent timer drift between UI areas.
+- Fixed local withdraw from the top status bar so the main central button updates immediately after the withdraw request.
+- Fixed session row deduplication so users no longer lose future rows when iRacing reuses a raw `session_id`.
+- Improved queue handoff when the user is already registered elsewhere by withdrawing the current registration before switching to the nearer queued session.
+- Improved browser-side registration state refresh after local register and withdraw actions.
 
 ## Validation
 
 - Built the Chromium extension package with `npm run build`.
-- Ran a production dependency audit with `npm audit --omit=dev`.
-- Ran repository privacy and secret scans across tracked source and documentation files.
+- Repacked the Chromium release zip for GitHub Releases.
+- Verified GitHub release notes and repository docs were updated for the consolidated V2 release.
