@@ -36,14 +36,14 @@ jobs:
       - name: Package Chromium release zip
         run: |
           VERSION="${{ steps.version.outputs.value }}"
-          PACKAGE_DIR="release/irefined-browser-chromium-v$VERSION"
+          PACKAGE_DIR="release/irefined-browser-chromium-$VERSION"
           mkdir -p "$PACKAGE_DIR"
           cp -R extension/dist/. "$PACKAGE_DIR/"
           cd release
-          zip -r "irefined-browser-chromium-v$VERSION.zip" "irefined-browser-chromium-v$VERSION"
+          zip -r "irefined-browser-chromium-$VERSION.zip" "irefined-browser-chromium-$VERSION"
 
       - name: Upload release-style artifact
         uses: actions/upload-artifact@v4
         with:
-          name: irefined-browser-chromium-v${{ steps.version.outputs.value }}
-          path: release/irefined-browser-chromium-v${{ steps.version.outputs.value }}.zip
+          name: irefined-browser-chromium-${{ steps.version.outputs.value }}
+          path: release/irefined-browser-chromium-${{ steps.version.outputs.value }}.zip
