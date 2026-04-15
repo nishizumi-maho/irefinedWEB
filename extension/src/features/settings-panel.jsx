@@ -253,6 +253,19 @@ async function initSettingsPanel(activate = true) {
                   <label htmlFor="" class="iref-setting">
                     <i
                       class="icon-information text-info"
+                      title="Advanced: when a queued session replaces an existing registration, add the displaced later session back to the queue. Leave this off unless you want iRefined to re-register sessions it withdrew from."
+                    ></i>
+                    Re-queue displaced registration
+                    <input
+                      type="checkbox"
+                      name="queue-requeue-displaced-registration"
+                      checked={settings["queue-requeue-displaced-registration"]}
+                      onChange={handleChange}
+                    />
+                  </label>
+                  <label htmlFor="" class="iref-setting">
+                    <i
+                      class="icon-information text-info"
                       title="Play a short sound when a queued race finally sends its register request."
                     ></i>
                     Queue register sound

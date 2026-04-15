@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "iRefined Browser",
-  "version": "1.0.0",
-  "version_name": "v1",
+  "version": "2.0.0",
+  "version_name": "v2",
   "description": "Loads iRefined on the members-ng iRacing website.",
   "icons": {
     "16": "icons/icon-16.png",
@@ -21,6 +21,7 @@
   "content_scripts": [
     {
       "matches": [
+        "https://members-ng.iracing.com/web/*",
         "https://members-ng.iracing.com/web/racing/*"
       ],
       "css": [

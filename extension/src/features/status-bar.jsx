@@ -83,13 +83,17 @@ function findNextRaceSection() {
 
   return findClosest(heading, (node) => {
     const text = normalizeText(node.innerText || "");
-    return text.includes("More ways to race");
+    return text.includes("More way") || text.includes("Race Duration");
   });
 }
 
 function findAction(pattern, root = document, visibleOnly = true) {
   return [...root.querySelectorAll("button, a")]
     .filter((el) => !el.closest("#iref-ui-root"))
+    .filter((el) => !el.closest("#iref-top-action-row"))
+    .filter((el) => !el.closest("#iref-top-queue-row"))
+    .filter((el) => !el.closest(".iref-session-register-btn"))
+    .filter((el) => !el.closest(".iref-queue-btn"))
     .filter((el) => !visibleOnly || isVisible(el))
     .find((el) => pattern.test(normalizeText(el.innerText || el.textContent || "")));
 }
@@ -140,24 +144,30 @@ function getCurrentCarName(section) {
 
 function getSiteRegistrationState() {
   const nextRaceSection = findNextRaceSection();
-
-  if (!nextRaceSection) {
-    return null;
-  }
-
-  const withdrawAction = findAction(/^Withdraw$/i, nextRaceSection, false);
+  const withdrawAction =
+    (nextRaceSection && findAction(/^Withdraw$/i, nextRaceSection, false)) ||
+    findAction(/^Withdraw$/i, document, false);
 
   if (!withdrawAction) {
     return null;
   }
 
+  const actionSection =
+    findClosest(withdrawAction, (node) => {
+      const text = normalizeText(node.innerText || "");
+      return text.includes("Event Start") || text.includes("Race Duration");
+    }) || nextRaceSection;
+
   return {
     status: "registered",
     source: "site",
     season_name: getCurrentSeriesName() || null,
-    car_name: getCurrentCarName(nextRaceSection),
+    car_name: getCurrentCarName(nextRaceSection || actionSection),
     withdrawAction,
-    joinAction: findAction(/^(Join Race|View in iRacing|Launch iRacing)$/i, nextRaceSection, false),
+    joinAction:
+      (nextRaceSection &&
+        findAction(/^(Join Race|View in iRacing|Launch iRacing)$/i, nextRaceSection, false)) ||
+      findAction(/^(Join Race|View in iRacing|Launch iRacing)$/i, actionSection || document, false),
   };
 }
 
