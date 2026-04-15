@@ -115,6 +115,108 @@
   background: rgba(46, 66, 110, 0.95);
 }
 
+.iref-purchase-status {
+  margin-bottom: 12px;
+  color: #d4def7;
+  font-size: 13px;
+}
+
+.iref-purchase-status > div + div {
+  margin-top: 2px;
+}
+
+.iref-purchase-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.iref-purchase-actions .iref-secondary-btn {
+  margin-left: 0;
+  border-radius: 6px;
+}
+
+.iref-purchase-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.iref-purchase-metric,
+.iref-purchase-card {
+  border: 1px solid rgba(88, 105, 148, 0.65);
+  border-radius: 6px;
+  background: rgba(18, 24, 40, 0.88);
+}
+
+.iref-purchase-metric {
+  padding: 10px 12px;
+}
+
+.iref-purchase-metric-label {
+  display: block;
+  color: #9fb0d8;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.iref-purchase-metric-value {
+  color: white;
+  font-size: 18px;
+}
+
+.iref-purchase-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.iref-purchase-card {
+  padding: 12px;
+}
+
+.iref-purchase-list {
+  display: grid;
+  gap: 8px;
+}
+
+.iref-purchase-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.iref-purchase-row-label {
+  color: #d7e0f6;
+}
+
+.iref-purchase-row-value {
+  color: white;
+  text-align: right;
+}
+
+.iref-purchase-empty,
+.iref-purchase-note {
+  color: #a7b5d6;
+  font-size: 13px;
+}
+
+.iref-purchase-note > div + div {
+  margin-top: 4px;
+}
+
+@media (max-width: 700px) {
+  .iref-purchase-metrics,
+  .iref-purchase-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
 @keyframes iref-settings-panel-icon-gradient {
   0% {
     background-position: 0% 50%;

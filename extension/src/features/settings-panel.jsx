@@ -319,6 +319,19 @@ async function initSettingsPanel(activate = true) {
                       onChange={handleChange}
                     />
                   </label>
+                  <label htmlFor="" class="iref-setting">
+                    <i
+                      class="icon-information text-info"
+                      title="Show or hide the financial snapshot widget on the main dashboard page. When left on, the values still stay hidden until you reveal them."
+                    ></i>
+                    Dashboard financial widget
+                    <input
+                      type="checkbox"
+                      name="dashboard-purchase-summary"
+                      checked={settings["dashboard-purchase-summary"]}
+                      onChange={handleChange}
+                    />
+                  </label>
                   <p class="m-b-1">
                     Desktop-only features such as auto join and auto forfeit are
                     disabled in the browser build.
