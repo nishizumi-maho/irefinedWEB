@@ -1,11 +1,13 @@
 import features from "../feature-manager.js";
-import ws from "../helpers/websockets.js";
 import {
   activateQueueItem,
   clearRegistrationState,
   confirmRegistrationState,
+  getCurrentTime,
   getCurrentRegistrationState,
+  isCurrentPageWithdrawPending,
   removeQueuedSession,
+  requestCurrentSessionWithdraw,
 } from "./auto-register.js";
 import React from "dom-chef";
 import "./status-bar.css";
@@ -143,6 +145,10 @@ function getCurrentCarName(section) {
 }
 
 function getSiteRegistrationState() {
+  if (isCurrentPageWithdrawPending()) {
+    return null;
+  }
+
   const nextRaceSection = findNextRaceSection();
   const withdrawAction =
     (nextRaceSection && findAction(/^Withdraw$/i, nextRaceSection, false)) ||
@@ -185,6 +191,11 @@ function getRegistrationBannerState() {
   const storedState = getCurrentRegistrationState();
   const siteState = getSiteRegistrationState();
   const nextRaceSection = findNextRaceSection();
+
+  if (isCurrentPageWithdrawPending()) {
+    clearRegistrationState();
+    return null;
+  }
 
   if (siteState) {
     return confirmRegistrationState({
@@ -278,16 +289,7 @@ function syncRegistrationBanner() {
   banner.classList.remove("hidden");
 
   const withdrawHandler = () => {
-    if (siteState?.withdrawAction && clickActionElement(siteState.withdrawAction)) {
-      window.setTimeout(() => {
-        clearRegistrationState();
-      }, 250);
-      return;
-    }
-
-    if (ws.withdraw()) {
-      clearRegistrationState();
-    }
+    requestCurrentSessionWithdraw();
   };
 
   actionsEl.appendChild(
@@ -312,9 +314,8 @@ function syncRegistrationBanner() {
 }
 
 function formatCountdown(targetTime) {
-  const now = new Date();
   const target = new Date(targetTime);
-  const diff = target - now;
+  const diff = target.getTime() - getCurrentTime();
 
   if (diff <= 5 * 60 * 1000) {
     return "Registering";
@@ -336,6 +337,20 @@ function formatCountdown(targetTime) {
   return `${seconds}s`;
 }
 
+function getQueueTypeTag(item) {
+  const sessionLabel = normalizeText(item?.event_type_name || "Race").toLowerCase();
+
+  if (sessionLabel.includes("qual")) {
+    return "(Q)";
+  }
+
+  if (sessionLabel.includes("race")) {
+    return "(R)";
+  }
+
+  return "";
+}
+
 function syncQueueBar() {
   const queueItemsContainer = uiRootEl.querySelector(".iref-queue-items");
   queueItemsContainer.innerHTML = "";
@@ -354,17 +369,21 @@ function syncQueueBar() {
 
   sortedQueue.forEach((item) => {
     let tooltipText;
+    const sessionLabel = normalizeText(
+      item.event_type_name || "Race"
+    ).toLowerCase();
+    const queueTypeTag = getQueueTypeTag(item);
 
     switch (item.status) {
       case "found":
         tooltipText =
-          "Race session found, you will be registered 5 minutes before the start time. Click to register now.";
+          `${item.event_type_name || "Race"} session found. Automatic register starts 5 minutes before the start time. Click to register now.`;
         break;
       case "registering":
         tooltipText = "Registering, this can take up to 30 seconds.";
         break;
       case "queued":
-        tooltipText = "Searching for race session.";
+        tooltipText = `Searching for ${sessionLabel} session.`;
         break;
       default:
         tooltipText = "";
@@ -380,7 +399,7 @@ function syncQueueBar() {
         <span className="iref-queue-text-fixed">
           {formatCountdown(item.start_time)}
         </span>
-        <span> {item.season_name}</span>
+        <span> {queueTypeTag ? `${queueTypeTag} ` : ""}{item.season_name}</span>
         <button
           className="iref-remove-btn"
           onClick={() => {
