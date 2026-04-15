@@ -11,8 +11,8 @@
 
 If you just want to use the extension, do this:
 
-1. Open the [latest release](https://github.com/nishizumi-maho/irefinedWEB/releases/latest)
-2. Download the file named like `irefined-browser-chromium-v2.zip`
+1. Open the [V3 experimental release](https://github.com/nishizumi-maho/irefinedWEB/releases/tag/v3)
+2. Download the file named like `irefined-browser-chromium-v3.zip`
 3. Extract that zip somewhere permanent on your PC
 4. Open `chrome://extensions` in Chrome, or `edge://extensions` in Edge
 5. Enable `Developer mode`
@@ -33,15 +33,39 @@ Quick notes:
 - Official series register and withdraw helpers
 - Queueing race and qualifying sessions from the web UI
 - Direct practice registration when the iRacing website exposes it
+- Dashboard spend widget with compact private mode, Order History analysis, and content catalog estimates
 - Hosted and League session import/export helpers
 - Test Drive session sharing buttons
 - UI quality-of-life tweaks for the `members-ng` layout
 
 This repository is a browser-focused fork/adaptation of the original `iRefined` project. The old desktop launcher flow is intentionally removed here. This build targets the website at `https://members-ng.iracing.com/web/*` and does not try to inject into the installed iRacing UI.
 
+## V3 Experimental Release
+
+V3 is an experimental release focused on ownership/spend visibility and update discoverability while keeping financial values private by default.
+
+Main changes since V2:
+
+- Added a dashboard `Budget Snapshot` widget.
+- The widget opens in compact mode and shows the last 30 days of spend after Order History has been synced.
+- All financial values and price curiosities are hidden by default. Click `Reveal` to show them and `Hide` to cover them again.
+- The expanded widget shows total content spend and the estimated pending cost for unowned cars and tracks.
+- Added an Order History analyzer with spending categories, hosted session totals, subscriptions, gifts, credits, and date-range filters.
+- Added rotating price curiosities that compare content spend and pending catalog value with real-world racing-related items.
+- Added a more visible in-page update popup when a newer release is detected.
+- Added a narrow storage bridge so dashboard pages and Order History can share only approved local summary keys.
+- Removed the first-run welcome page. The dashboard widget is enabled by default, compact by default, and private by default.
+
+Privacy notes for V3:
+
+- Financial summaries are stored locally in the browser through `chrome.storage.local`.
+- The Order History summary stores sanitized dates, categories, and amounts needed for totals and filters.
+- Order numbers, names, e-mails, tokens, and credentials are not intentionally stored by the V3 spend tools.
+- The financial widget can be disabled entirely from the iRefined settings panel.
+
 ## V2 Release
 
-V2 is the current release focused on making the browser-side Official session workflow easier to use from the iRacing `members-ng` pages.
+V2 focused on making the browser-side Official session workflow easier to use from the iRacing `members-ng` pages.
 
 Main changes since V1:
 
@@ -69,6 +93,7 @@ Critical fixes already rolled into this V2 release:
 
 - 🟢 Register and withdraw from supported Official series pages
 - ⏳ Queue future sessions and let the extension handle the switch near race time
+- 💵 Check recent and total content spend privately from the dashboard
 - 📦 Export/import `session.json` for Hosted and League setup reuse
 - 🔔 Get a queue notification sound when the new registration lands
 - 🧰 Apply small UI quality-of-life tweaks directly on `members-ng`
@@ -157,6 +182,10 @@ Current browser-first features:
 - Hosted and League `Create a Race` session import/export
 - page-level export helpers for supported pages
 - Test Drive session sharing buttons
+- dashboard financial snapshot with last-30-days compact mode
+- expanded content spend and pending catalog estimates
+- Order History spend breakdown by category, including hosted sessions and subscriptions
+- local date-range filtering for synced Order History summaries
 - optional UI tweaks:
   - hide sidebars
   - collapse menu
@@ -174,6 +203,8 @@ Known limitations:
 - launching the sim is still local-app behavior
 - weather import/export is currently hidden while it is being reworked, use the session import/export as a workaround (the weather feature works there!)
 - practice registration is only added when `members-ng` exposes the required practice registration data
+- real paid spend requires opening Order History once so the extension can sync the local summary
+- dashboard catalog estimates use current shop pricing, not historical purchase prices
 - some UI placements on `members-ng` may break whenever iRacing changes the site layout
 
 In practice:
@@ -188,8 +219,8 @@ In practice:
 
 This is the recommended path for normal users.
 
-1. Open the [latest release](https://github.com/nishizumi-maho/irefinedWEB/releases/latest)
-2. Download the latest `irefined-browser-chromium-v2.zip` style file
+1. Open the [V3 experimental release](https://github.com/nishizumi-maho/irefinedWEB/releases/tag/v3)
+2. Download the latest `irefined-browser-chromium-v3.zip` style file
 3. Extract it
 4. Open `chrome://extensions` or `edge://extensions`
 5. Enable `Developer mode`
@@ -234,6 +265,7 @@ Enabled by default:
 - Queue system for future sessions
 - Queue register sound
 - Join button displays session type
+- Dashboard financial widget, compact and hidden by default
 
 Disabled by default:
 
@@ -327,6 +359,35 @@ In short:
 ### Test Drive
 
 On supported Test Drive flows, the extension can expose sharing helpers for session configuration export/import.
+
+### Dashboard Spend Widget
+
+On the main `members-ng` dashboard, V3 adds a compact `Budget Snapshot`.
+
+Default behavior:
+
+- the widget is enabled
+- the widget starts compact
+- values are hidden
+- rotating curiosities are hidden
+
+Click `Reveal` to show financial values. Click `Expand` to see total content spend and pending catalog value. Click `Order History` to sync real paid totals from the legacy members account page.
+
+The dashboard can estimate owned and missing content from the current shop catalog. Real paid totals, hosted sessions, subscriptions, gifts, credits, and date filters require the Order History sync.
+
+### Privacy
+
+The V3 financial tools are local browser helpers.
+
+Stored local data is limited to:
+
+- iRefined settings
+- queue state and selected car preferences
+- update-check cache
+- sanitized purchase/category summaries
+- catalog ownership/cost summaries
+
+The extension does not intentionally store passwords, auth tokens, e-mail addresses, order numbers, or raw invoice HTML. The financial widget can be disabled entirely from the iRefined settings panel.
 
 ## 🧪 Recommended Session Reuse Workflow
 

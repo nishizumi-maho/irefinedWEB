@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS = {
   "queue-register-sound": true,
   "queue-register-sound-volume": 65,
   "better-join-button": true,
+  "dashboard-purchase-summary": true,
   "no-toasts": false,
   "auto-close-toasts": false,
   "toast-timeout-s": 5,

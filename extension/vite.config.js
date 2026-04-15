@@ -21,6 +21,8 @@ export default defineConfig({
       targets: [
         { src: "public/manifest.json", dest: "." },
         { src: "public/icons/*", dest: "icons" },
+        { src: "public/bridge.js", dest: "." },
+        { src: "public/account-main.js", dest: "." },
       ],
     }),
   ],
