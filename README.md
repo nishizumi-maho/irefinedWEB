@@ -5,7 +5,7 @@
 If you just want to use the extension, do this:
 
 1. Open the [latest release](https://github.com/nishizumi-maho/irefinedWEB/releases/latest)
-2. Download the file named like `irefined-browser-chromium-v1.zip`
+2. Download the file named like `irefined-browser-chromium-v2.zip`
 3. Extract that zip somewhere permanent on your PC
 4. Open `chrome://extensions` in Chrome, or `edge://extensions` in Edge
 5. Enable `Developer mode`
@@ -28,12 +28,31 @@ Important:
 `iRefined Browser` is a browser-first extension for the iRacing `members-ng` site:
 
 - Official series register and withdraw helpers
-- Queueing future official sessions from the web UI
+- Queueing race and qualifying sessions from the web UI
+- Direct practice registration when the iRacing website exposes it
 - Hosted and League session import/export helpers
 - Test Drive session sharing buttons
 - UI quality-of-life tweaks for the `members-ng` layout
 
-This repository is a browser-focused fork/adaptation of the original `iRefined` project. The old desktop launcher flow is intentionally removed here. This build targets the website at `https://members-ng.iracing.com/web/racing/*` and does not try to inject into the installed iRacing UI.
+This repository is a browser-focused fork/adaptation of the original `iRefined` project. The old desktop launcher flow is intentionally removed here. This build targets the website at `https://members-ng.iracing.com/web/*` and does not try to inject into the installed iRacing UI.
+
+## V2 Experimental Release
+
+V2 is an experimental release focused on making the browser-side Official session workflow easier to use from the iRacing `members-ng` pages.
+
+Main changes since V1:
+
+- Added race queue buttons to upcoming race rows, including rows that use the native `View in iRacing` action.
+- Added queue support for qualifying sessions.
+- Kept the top session card as the direct `Register` or `Withdraw` action while still allowing the same open session to be queued from the upcoming sessions area.
+- Added a clearer `Race Queue` area with upcoming race session buttons.
+- Hid the top-card `View in iRacing` button in registerable, registered, and not-yet-open states so the primary action is easier to understand.
+- Replaced `Register unavailable` with `Queue for the next race` when no valid direct registration action is available yet.
+- Removed queue buttons from `Currently Racing`; that view keeps the native `View in iRacing` behavior.
+- Added direct `Register` for practice sessions only when the site exposes a valid registerable practice session id.
+- Improved registration state refresh after browser-side register and withdraw actions.
+- Added smarter queue handoff: if a queued session becomes registerable while you are already registered somewhere else, the extension withdraws the current registration before registering the queued session.
+- Added the advanced `Re-queue displaced registration` setting, disabled by default. When enabled, a displaced existing registration can be kept queued after switching into a nearer queued session.
 
 ## Browser Support
 
@@ -110,8 +129,10 @@ This project is not affiliated with iRacing.
 Current browser-first features:
 
 - direct `Register` and `Withdraw` helpers on supported Official series pages
-- queue helpers for future Official race sessions
-- automatic register switching for queued sessions near race time
+- queue helpers for race and qualifying sessions on supported Official series pages
+- automatic register switching when a queued session becomes registerable
+- optional re-queueing of the displaced registration after a queue handoff
+- direct practice registration when the site exposes a registerable practice session
 - queue notification sound with configurable volume
 - registration banner showing current browser-managed registration state
 - Hosted and League `Create a Race` session import/export
@@ -133,6 +154,7 @@ Known limitations:
 - joining a session still depends on whatever action the site exposes, which usually hands off to the local iRacing app
 - launching the sim is still local-app behavior
 - weather import/export is currently hidden while it is being reworked
+- practice registration is only added when `members-ng` exposes the required practice registration data
 - some UI placements on `members-ng` may break whenever iRacing changes the site layout
 
 In practice:
@@ -148,7 +170,7 @@ In practice:
 This is the recommended path for normal users.
 
 1. Open the [latest release](https://github.com/nishizumi-maho/irefinedWEB/releases/latest)
-2. Download the latest `irefined-browser-chromium-v1.zip` style file
+2. Download the latest `irefined-browser-chromium-v2.zip` style file
 3. Extract it
 4. Open `chrome://extensions` or `edge://extensions`
 5. Enable `Developer mode`
@@ -180,7 +202,7 @@ Open:
 
 or any other `members-ng` page under:
 
-- `https://members-ng.iracing.com/web/racing/*`
+- `https://members-ng.iracing.com/web/*`
 
 If the extension is loaded correctly, the custom iRefined UI should appear on supported pages.
 
@@ -197,6 +219,7 @@ Enabled by default:
 Disabled by default:
 
 - Prompt for car when queueing
+- Re-queue displaced registration
 - No notifications
 - Auto close notifications
 - Hide sidebars
@@ -217,7 +240,10 @@ On supported Official `Go Racing` pages, the extension can:
 - show a browser-side `Register` button
 - switch that button to `Withdraw` when the browser-managed registration is active
 - show a green registration banner at the top
-- queue future race sessions
+- queue race and qualifying sessions
+- register practice sessions directly when the site exposes a registerable practice session
+
+When the top session is open for registration, the top card keeps the direct `Register` or `Withdraw` action. The upcoming race session list can still show `Queue` for that same session, so a user can choose between registering immediately or leaving it queued.
 
 If a queued session reaches the registration window:
 
@@ -225,9 +251,11 @@ If a queued session reaches the registration window:
 - then it sends the new register request
 - then it plays the configured queue sound
 
+With `Re-queue displaced registration` enabled, the previous registration can be kept queued after the extension switches you into the newer queued session. This setting is off by default because it is intentionally more aggressive.
+
 ### Queue behavior
 
-Queue is meant for future Official race sessions.
+Queue is meant for supported Official race and qualifying sessions.
 
 Typical flow:
 
@@ -235,14 +263,15 @@ Typical flow:
 2. Choose your car if needed
 3. Click a `Queue` button
 4. Leave the tab open, or come back later
-5. When the queued race becomes registerable, the extension moves it into `Register now`
-6. Near race time, the extension attempts the withdraw/register switch automatically
+5. When the queued session becomes registerable, the extension moves it into `Register now`
+6. The extension attempts the withdraw/register switch automatically
 
 Important notes:
 
 - queue depends on the site still exposing the session and registration data the extension expects
 - queue is safest when the series page can still resolve a real session id
 - if you are already registered elsewhere, queue will try to withdraw that session before sending the new register request
+- `Currently Racing` intentionally does not show queue buttons
 
 ### Hosted and Leagues
 

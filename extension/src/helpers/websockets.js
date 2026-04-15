@@ -139,13 +139,34 @@ function send(event, data) {
   return true;
 }
 
+function refreshNow() {
+  if (!authSocket || !authSocket.connected) {
+    return false;
+  }
+
+  authSocket.emit("now");
+  return true;
+}
+
+function scheduleStatusRefresh() {
+  refreshNow();
+  setTimeout(refreshNow, 1200);
+  setTimeout(refreshNow, 3500);
+}
+
 function withdraw() {
   log("🚫 Withdrawing from current session");
-  return send("data_services", {
+  const sent = send("data_services", {
     service: "registration",
     method: "withdraw",
     args: {},
   });
+
+  if (sent) {
+    scheduleStatusRefresh();
+  }
+
+  return sent;
 }
 
 function register(
@@ -172,7 +193,13 @@ function register(
     data.args.subsession_id = subsession_id;
   }
 
-  return send("data_services", data);
+  const sent = send("data_services", data);
+
+  if (sent) {
+    scheduleStatusRefresh();
+  }
+
+  return sent;
 }
 
 function isReady() {
@@ -181,6 +208,7 @@ function isReady() {
 
 const ws = {
   send,
+  refreshNow,
   register,
   withdraw,
   isReady,

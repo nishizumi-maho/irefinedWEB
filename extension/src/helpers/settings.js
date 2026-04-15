@@ -3,6 +3,7 @@ export const DEFAULT_SETTINGS = {
   "share-hosted-session": true,
   "auto-register": true,
   "queue-car-prompt": false,
+  "queue-requeue-displaced-registration": false,
   "queue-register-sound": true,
   "queue-register-sound-volume": 65,
   "better-join-button": true,
