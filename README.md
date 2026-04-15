@@ -1,6 +1,13 @@
-# iRefined Browser
+# iRefined Browser 🚀
 
-## Quick Install (GitHub Releases)
+> **Note for iRacing Staff**
+>
+> This repository is a browser-only helper layer for the public `members-ng` website. It does **not** inject into the installed iRacing UI, does **not** rely on closed Electron/devtools ports, does **not** attach to the local sim client, does **not** automate driving inputs, and does **not** attempt to bypass authentication or security controls. The intent of this fork is to provide UI helpers on top of the existing logged-in website experience only, using actions and state already exposed through `members-ng`. If any behavior here is considered incompatible with current iRacing policy, please open an issue or contact the maintainer so it can be adjusted cooperatively.
+
+This repository and its contributors are not affiliated with iRefined. This repository is a fork of iRefined.
+Discord of the original iRefined repository: https://discord.gg/hxVf8wcGaV
+
+## ⚡ Quick Install (GitHub Releases)
 
 If you just want to use the extension, do this:
 
@@ -13,17 +20,13 @@ If you just want to use the extension, do this:
 7. Select the extracted folder that contains `manifest.json`
 8. Open `https://members-ng.iracing.com/web/racing/home/dashboard`
 
-Important:
+Quick notes:
 
 - do not point the browser at the `.zip` itself; extract it first
 - do not leave the extension inside a temporary folder that you plan to delete later
 - when a new GitHub release comes out, download the new zip, extract it, and click `Reload` on the browser extensions page
 - unpacked extensions installed from GitHub Releases do not auto-update by themselves in Chromium browsers
 - the extension itself will warn you inside the iRefined UI when a newer GitHub Release is available
-
-> **Note for iRacing Staff**
->
-> This repository is a browser-only helper layer for the public `members-ng` website. It does **not** inject into the installed iRacing UI, does **not** rely on closed Electron/devtools ports, does **not** attach to the local sim client, does **not** automate driving inputs, and does **not** attempt to bypass authentication or security controls. The intent of this fork is to provide UI helpers on top of the existing logged-in website experience only, using actions and state already exposed through `members-ng`. If any behavior here is considered incompatible with current iRacing policy, please open an issue or contact the maintainer so it can be adjusted cooperatively.
 
 `iRefined Browser` is a browser-first extension for the iRacing `members-ng` site:
 
@@ -54,9 +57,17 @@ Main changes since V1:
 - Added smarter queue handoff: if a queued session becomes registerable while you are already registered somewhere else, the extension withdraws the current registration before registering the queued session.
 - Added the advanced `Re-queue displaced registration` setting, disabled by default. When enabled, a displaced existing registration can be kept queued after switching into a nearer queued session.
 
-## Browser Support
+## ✨ At A Glance
 
-### Chromium browsers
+- 🟢 Register and withdraw from supported Official series pages
+- ⏳ Queue future sessions and let the extension handle the switch near race time
+- 📦 Export/import `session.json` for Hosted and League setup reuse
+- 🔔 Get a queue notification sound when the new registration lands
+- 🧰 Apply small UI quality-of-life tweaks directly on `members-ng`
+
+## 🌐 Browser Support
+
+### Chromium browsers ✅
 
 The current release package is built for Chromium browsers.
 
@@ -70,7 +81,7 @@ That includes the easiest targets:
 
 For these browsers, the current extension package should work with little or no change.
 
-### Firefox
+### Firefox 🛠️
 
 Firefox is possible in theory, but it is not a drop-in target for this repository right now.
 
@@ -80,13 +91,13 @@ The codebase is reasonably portable, but Firefox distribution is a different pat
 - this repository currently ships a Chromium-style unpacked package, not a Firefox release artifact
 - if we decide to support Firefox later, it should be treated as a separate distribution target and tested independently
 
-### Safari
+### Safari 🍎
 
 Safari is also possible in theory, but it is a separate packaging and distribution project.
 
 This repository does not currently target Safari.
 
-## Update Model
+## 🔄 Update Model
 
 Current update model:
 
@@ -111,7 +122,7 @@ How the notice works:
 
 The extension does not self-install updates. The notice is there to tell users that they should download the newer release zip and reload the unpacked extension.
 
-## What This Fork Is
+## 🧭 What This Fork Is
 
 This repository exists to make the useful parts of iRefined work directly in Chromium browsers on `members-ng`.
 
@@ -124,7 +135,7 @@ The goal is:
 
 This project is not affiliated with iRacing.
 
-## What Works
+## ✅ What Works
 
 Current browser-first features:
 
@@ -145,7 +156,7 @@ Current browser-first features:
   - auto-close notifications
   - inline log viewer
 
-## What Does Not Work
+## ⚠️ What Does Not Work
 
 This extension does not turn iRacing into a full browser-only experience.
 
@@ -153,7 +164,7 @@ Known limitations:
 
 - joining a session still depends on whatever action the site exposes, which usually hands off to the local iRacing app
 - launching the sim is still local-app behavior
-- weather import/export is currently hidden while it is being reworked
+- weather import/export is currently hidden while it is being reworked, use the session import/export as a workaround (the weather feature works there!)
 - practice registration is only added when `members-ng` exposes the required practice registration data
 - some UI placements on `members-ng` may break whenever iRacing changes the site layout
 
@@ -163,7 +174,7 @@ In practice:
 - `Join` only works when the site itself exposes a join/open action
 - this project is best understood as a web helper layer on top of `members-ng`
 
-## Installation
+## 📥 Installation
 
 ### Install from GitHub Releases
 
@@ -206,7 +217,7 @@ or any other `members-ng` page under:
 
 If the extension is loaded correctly, the custom iRefined UI should appear on supported pages.
 
-## Default Settings
+## 🎛️ Default Settings
 
 Enabled by default:
 
@@ -231,7 +242,7 @@ Default numeric values:
 - notification auto-close timeout: `5` seconds
 - queue sound volume: `65%`
 
-## How The Main Flows Work
+## 🏁 How The Main Flows Work
 
 ### Official series
 
@@ -309,7 +320,25 @@ In short:
 
 On supported Test Drive flows, the extension can expose sharing helpers for session configuration export/import.
 
-## Logs And Troubleshooting
+## 🧪 Recommended Session Reuse Workflow
+
+If your goal is to preserve a setup you like and keep coming back to it later, this is the easiest pattern:
+
+1. Export the `session.json` for the session you want to preserve
+2. Create a Hosted race with any valid future date
+3. Import that `session.json`
+4. Let the wizard repopulate the session details and embedded weather automatically
+5. Schedule that Hosted race for the future
+6. Reuse that Hosted setup later whenever you want a known-good configuration
+
+Why people like this workflow:
+
+- 🧱 you build the session once
+- 🌦️ the weather is already embedded inside the exported session config
+- 🔁 it becomes much easier to recreate the same test/setup environment later
+- 🖥️ it plays nicely with workflows that still bounce through the local iRacing UI for Test Drive or checks
+
+## 🩺 Logs And Troubleshooting
 
 There are two useful places to collect logs.
 
@@ -339,7 +368,7 @@ Useful things to capture:
 - queue/register/withdraw messages
 - screenshots of the series page if the UI does not match the logs
 
-## How To Report A Useful Issue
+## 🐞 How To Report A Useful Issue
 
 Before opening an issue:
 
@@ -371,7 +400,7 @@ Bad examples:
 - `doesn't work`
 - `queue broken`
 
-## Issue Templates
+## 📝 Issue Templates
 
 GitHub issue templates are included in `.github/ISSUE_TEMPLATE`.
 
@@ -380,7 +409,7 @@ Use:
 - `bug_report.md` for broken behavior
 - `feature_request.md` for new ideas
 
-## Development
+## 🛠️ Development
 
 ### Build
 
@@ -416,14 +445,14 @@ The intended maintainer flow is:
 
 That release zip is what normal users should download.
 
-## Notes For Users
+## 💡 Notes For Users
 
 - If the site DOM changes, selectors may need to be updated.
 - If iRacing changes their backend behavior, register/withdraw helpers may stop working.
 - If a feature depends on the site exposing a button or session id, the extension cannot invent that data on its own.
 - If audio does not play for queue notifications, interact with the page once first so the browser can unlock audio playback.
 
-## Current Repository Scope
+## 📦 Current Repository Scope
 
 This repository only keeps the browser-extension-focused code that is actually used by this fork.
 
