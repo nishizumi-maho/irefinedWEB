@@ -11,7 +11,7 @@ Discord of the original iRefined project: https://discord.gg/hxVf8wcGaV
 
 If you just want to use the extension, do this:
 
-1. Open the [GitHub Releases page]([https://github.com/nishizumi-maho/irefinedWEB/releases](https://github.com/nishizumi-maho/irefinedWEB/releases/tag/v2))
+1. Open https://github.com/nishizumi-maho/irefinedWEB/releases/tag/v2
 2. Download the newest file named like `irefined-browser-chromium-vX.zip`
 3. Extract that zip somewhere permanent on your PC
 4. Open `chrome://extensions` in Chrome, or `edge://extensions` in Edge
