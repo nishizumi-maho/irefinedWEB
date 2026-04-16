@@ -49,7 +49,6 @@ let sessionLoaded = false;
 let autoRefreshAttempted = false;
 let dashboardSessionId = "";
 let historySyncRequested = false;
-let cleanupBound = false;
 
 function isDashboardPage() {
   return location.pathname === dashboardPath;
@@ -98,35 +97,6 @@ function ensureDashboardSessionId() {
     dashboardSessionId = createSessionToken();
     return dashboardSessionId;
   }
-}
-
-async function clearBudgetSnapshotSession() {
-  const sessionId = ensureDashboardSessionId();
-
-  try {
-    sessionStorage.removeItem(sessionStorageKey);
-    sessionStorage.removeItem(autoRefreshSessionKey);
-    sessionStorage.removeItem(sessionTokenStorageKey);
-  } catch {}
-
-  if (!sessionId) {
-    return;
-  }
-
-  try {
-    await clearStoredPurchaseAnalytics(sessionId);
-  } catch {}
-}
-
-function bindSessionCleanup() {
-  if (cleanupBound) {
-    return;
-  }
-
-  cleanupBound = true;
-  window.addEventListener("beforeunload", () => {
-    void clearBudgetSnapshotSession();
-  });
 }
 
 function getAnchor() {
@@ -638,6 +608,12 @@ async function loadStoredAnalytics(force = false) {
   loadPromise = getStoredPurchaseAnalytics(sessionId)
     .then((stored) => {
       const nextSummary = stored.purchaseHistorySummary || null;
+
+      if (!nextSummary) {
+        state.purchaseHistoryError = "";
+        return;
+      }
+
       const previousSyncAt = state.purchaseHistorySummary?.syncedAt || "";
       const nextSyncAt = nextSummary?.syncedAt || "";
 
@@ -647,9 +623,7 @@ async function loadStoredAnalytics(force = false) {
         historySyncRequested = false;
       }
 
-      if (nextSummary) {
-        void clearStoredPurchaseAnalytics(sessionId);
-      }
+      void clearStoredPurchaseAnalytics(sessionId);
 
       state.purchaseHistoryError = "";
     })
@@ -742,7 +716,6 @@ function init(activate = true) {
   }
 
   booted = true;
-  bindSessionCleanup();
   ensureDashboardSessionId();
   tick();
   tickHandle = window.setInterval(tick, 1500);
