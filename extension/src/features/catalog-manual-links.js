@@ -145,6 +145,10 @@ function injectManualLinks(cars) {
 }
 
 async function scan() {
+  if (document.hidden) {
+    return;
+  }
+
   if (!document.querySelector(cardSelector)) {
     return;
   }

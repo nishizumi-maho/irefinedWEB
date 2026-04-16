@@ -15,10 +15,19 @@ const userRoles = {
 async function init(activate = true) {
   if (!activate) {
     clearInterval(persistInterval);
+    persistInterval = 0;
+    return;
+  }
+
+  if (persistInterval) {
     return;
   }
 
   persistInterval = setInterval(() => {
+    if (document.hidden) {
+      return;
+    }
+
     let joinBtnEl = $(selector);
 
     if (!joinBtnEl) {

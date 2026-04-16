@@ -559,6 +559,10 @@ async function refreshPendingSummary(force = false) {
 }
 
 function tick() {
+  if (document.hidden) {
+    return;
+  }
+
   if (!isDashboardPage()) {
     removeRoot();
     return;

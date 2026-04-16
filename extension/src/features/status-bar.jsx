@@ -419,6 +419,10 @@ function syncQueueBar() {
 }
 
 window.setInterval(() => {
+  if (document.hidden) {
+    return;
+  }
+
   syncRegistrationBanner();
   syncQueueBar();
 }, 1000);
