@@ -202,7 +202,8 @@ export async function getStoredPurchaseAnalytics() {
   };
 }
 
-export async function syncMissingContentSummary() {
+export async function syncMissingContentSummary(options = {}) {
+  const persist = options?.persist !== false;
   const [carsSummary, tracksSummary] = await Promise.all([
     collectCatalogSummary({
       url: "https://members-ng.iracing.com/web/shop/cars?filter=all&match=any&sort=package_name&tags=unowned&view=grid",
@@ -247,9 +248,11 @@ export async function syncMissingContentSummary() {
     },
   };
 
-  await bridgeStorageSet({
-    [MISSING_CONTENT_SUMMARY_KEY]: summary,
-  });
+  if (persist) {
+    await bridgeStorageSet({
+      [MISSING_CONTENT_SUMMARY_KEY]: summary,
+    });
+  }
 
   return summary;
 }

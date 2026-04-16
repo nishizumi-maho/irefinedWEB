@@ -18,4 +18,6 @@ import "./features/share-hosted-session.jsx";
 import "./features/go-racing-export.js";
 import "./features/better-join-button.js";
 import "./features/auto-register.js";
+import "./features/intelligence-center.js";
+import "./features/catalog-manual-links.js";
 import "./features/purchase-summary.js";

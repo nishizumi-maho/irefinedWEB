@@ -1,0 +1,240 @@
+.iref-dashboard-intelligence-center {
+  padding: 14px 16px;
+  border: 1px solid rgba(74, 96, 145, 0.42);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(20, 28, 48, 0.96), rgba(13, 18, 32, 0.96));
+  color: #eef4ff;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+}
+
+.iref-intelligence-header,
+.iref-intelligence-grid,
+.iref-intelligence-inline-actions,
+.iref-intelligence-sections-grid,
+.iref-intelligence-card-grid,
+.iref-intelligence-mini-grid {
+  display: flex;
+}
+
+.iref-intelligence-header {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.iref-intelligence-copy {
+  min-width: 0;
+}
+
+.iref-intelligence-label {
+  display: inline-block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: #67d4ff;
+}
+
+.iref-intelligence-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.iref-intelligence-subtitle {
+  margin: 4px 0 0;
+  color: #aebad9;
+  font-size: 12px;
+}
+
+.iref-intelligence-toolbar-btn,
+.iref-intelligence-action-btn {
+  border: 1px solid rgba(94, 120, 191, 0.42);
+  border-radius: 6px;
+  background: rgba(27, 38, 67, 0.9);
+  color: #f2f7ff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.iref-intelligence-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iref-intelligence-toolbar-btn,
+.iref-intelligence-action-btn {
+  padding: 8px 12px;
+}
+
+.iref-intelligence-toggle-btn {
+  min-width: 78px;
+  padding: 8px 10px;
+}
+
+.iref-intelligence-body {
+  min-height: 0;
+}
+
+.iref-intelligence-grid,
+.iref-intelligence-sections-grid,
+.iref-intelligence-card-grid,
+.iref-intelligence-mini-grid {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.iref-intelligence-grid {
+  margin-bottom: 12px;
+}
+
+.iref-intelligence-metric,
+.iref-intelligence-section,
+.iref-intelligence-compact-card {
+  border: 1px solid rgba(77, 97, 138, 0.38);
+  border-radius: 8px;
+  background: rgba(14, 19, 32, 0.82);
+}
+
+.iref-intelligence-metric {
+  flex: 1 1 160px;
+  min-width: 160px;
+  padding: 12px;
+}
+
+.iref-intelligence-metric-label {
+  display: block;
+  font-size: 12px;
+  color: #93a1c4;
+}
+
+.iref-intelligence-metric-value {
+  display: block;
+  margin-top: 6px;
+  font-size: 20px;
+  line-height: 1.15;
+  color: #ffffff;
+}
+
+.iref-intelligence-metric-note {
+  margin-top: 6px;
+  color: #aab7d6;
+  font-size: 12px;
+}
+
+.iref-intelligence-metric-note-line {
+  display: block;
+}
+
+.iref-intelligence-metric-note-line + .iref-intelligence-metric-note-line {
+  margin-top: 2px;
+}
+
+.iref-intelligence-section {
+  flex: 1 1 360px;
+  min-width: min(100%, 340px);
+  padding: 12px;
+}
+
+.iref-intelligence-section-wide {
+  flex-basis: 100%;
+}
+
+.iref-intelligence-sections-grid {
+  align-items: stretch;
+  margin-top: 12px;
+}
+
+.iref-intelligence-section-title {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ccd7f1;
+  color: #ccd7f1;
+}
+
+.iref-intelligence-inline-actions {
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.iref-intelligence-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.iref-intelligence-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.iref-intelligence-compact-card {
+  padding: 11px;
+}
+
+.iref-intelligence-compact-card-title {
+  display: block;
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.iref-intelligence-compact-card-meta {
+  margin-top: 5px;
+  color: #a5b3d4;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.iref-intelligence-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(64, 79, 118, 0.7);
+  color: #e7eeff;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.iref-intelligence-pill.is-positive {
+  background: rgba(23, 118, 67, 0.78);
+}
+
+.iref-intelligence-pill.is-warn {
+  background: rgba(146, 95, 11, 0.85);
+}
+
+.iref-intelligence-empty,
+.iref-intelligence-status {
+  padding: 10px 2px;
+  color: #a8b6d6;
+}
+
+.iref-intelligence-status {
+  margin-top: 10px;
+  font-size: 12px;
+  border-top: 1px solid rgba(74, 92, 133, 0.28);
+}
+
+@media (max-width: 900px) {
+  .iref-intelligence-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .iref-intelligence-inline-actions {
+    justify-content: flex-start;
+  }
+
+  .iref-intelligence-card-grid,
+  .iref-intelligence-mini-grid {
+    grid-template-columns: 1fr;
+  }
+}
