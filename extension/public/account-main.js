@@ -9,7 +9,8 @@
     return;
   }
 
-  const purchaseHistoryStorageKey = "iref_purchase_history_summary";
+  const purchaseHistorySessionKeyPrefix = "iref_purchase_history_summary::";
+  const bridgeTargetOrigin = window.location.origin;
   const epsilon = 0.0001;
   const priceReferences = [
     {
@@ -333,6 +334,21 @@
     endDateKey: "",
   };
   const curiositySeed = nextCuriositySeed("order-history");
+
+  function getDashboardSessionId() {
+    try {
+      return new URL(location.href).searchParams.get("irefSession") || "";
+    } catch {
+      return "";
+    }
+  }
+
+  function getPurchaseHistoryStorageKey() {
+    const sessionId = getDashboardSessionId();
+    return sessionId
+      ? `${purchaseHistorySessionKeyPrefix}${sessionId}`
+      : "";
+  }
 
   function normalizeText(text) {
     return String(text || "").replace(/\s+/g, " ").trim();
@@ -1859,6 +1875,12 @@
   }
 
   function storeSummary(summary) {
+    const storageKey = getPurchaseHistoryStorageKey();
+
+    if (!storageKey) {
+      return;
+    }
+
     window.postMessage(
       {
         source: "irefined-bridge-request",
@@ -1866,11 +1888,11 @@
         action: "storage-set",
         payload: {
           values: {
-            [purchaseHistoryStorageKey]: summary,
+            [storageKey]: summary,
           },
         },
       },
-      "*"
+      bridgeTargetOrigin
     );
   }
 

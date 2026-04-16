@@ -1,5 +1,51 @@
 # Changelog
 
+## V5 - 2026-04-16
+
+V5 is prepared from the stable V4.1 line and compares its user-facing scope against V2, because V2 is the known-good baseline for Official register, withdraw, and queue behavior.
+
+### Added Since V2
+
+- Dashboard `Budget Snapshot` with hidden-by-default values, compact last-30-days mode, expanded content spend/pending estimates, and richer local racing-cost curiosities.
+- Order History analyzer with category breakdowns, hosted-session and subscription categories, gifts/credits accounting, date-range filters, and sanitized summary handoff.
+- Dashboard `Intelligence Center` with compact member progress, anniversary, activity, streak, member-since, awards, participation credits, license snapshots, and recent events.
+- More visible GitHub release update notice inside the iRefined UI.
+- Registered-session banner with a live start countdown for the active registration.
+
+### Kept From V2
+
+- Official-series direct `Register` and `Withdraw`.
+- Race and qualifying queue buttons.
+- Practice `Register` only when the iRacing site exposes a valid practice session target.
+- `(R)` and `(Q)` markers in the queue bar.
+- Displaced-registration handoff and optional `Re-queue displaced registration`.
+- No queue buttons in `Currently Racing`.
+
+### Changed In V5
+
+- Updated extension versioning to `5.0.0` / `v5`.
+- `Budget Snapshot` now requires an Order History sync before showing spend values.
+- `Budget Snapshot` remains private by default: values and curiosities stay hidden until `Reveal`.
+- The Order History-to-dashboard bridge now uses a dashboard-session key and removes the bridge copy after the dashboard reads it.
+- The `Queue for the next race` top-card action mirrors the first visible race queue slot below it.
+- The main-card `Withdraw` button now uses a direct withdraw handler to avoid mode re-evaluation races.
+- The lower `Race Queue` list reorders existing buttons every sync so the current slot returns to the correct chronological position.
+- Removed the inactive direct car-manual setting/runtime hook because the toggle was not reliably controlling the feature.
+
+### Privacy And Safety
+
+- The extension still requests only the `storage` permission.
+- Financial summaries remain sanitized before being passed to the dashboard.
+- No remote curiosity feed or external dynamic content source was added.
+- No hardcoded secrets, personal credentials, auth tokens, or private local account data are intentionally stored in the tracked source.
+
+### Validation
+
+- `npm run build`.
+- `npm audit --omit=dev`.
+- Source scan for common secret/token/private-data patterns.
+- Manifest and permission review.
+
 ## V4.1 - 2026-04-16
 
 V4.1 is a focused refinement release on top of V4. It expands the local financial-comparison content and trims recurring browser-side work that did not need to run so often.

@@ -1,8 +1,10 @@
 import {
   bridgeStorageGet,
+  bridgeStorageRemove,
   bridgeStorageSet,
   MISSING_CONTENT_SUMMARY_KEY,
   PURCHASE_HISTORY_SUMMARY_KEY,
+  getPurchaseHistorySessionKey,
 } from "./bridge-storage.js";
 
 const currencyFormatter = new Intl.NumberFormat(undefined, {
@@ -190,16 +192,24 @@ async function collectCatalogSummary({ url, cardIdPrefix }) {
   }
 }
 
-export async function getStoredPurchaseAnalytics() {
-  const stored = await bridgeStorageGet([
-    PURCHASE_HISTORY_SUMMARY_KEY,
-    MISSING_CONTENT_SUMMARY_KEY,
-  ]);
+export async function getStoredPurchaseAnalytics(sessionId = "") {
+  const purchaseHistoryKey = getPurchaseHistorySessionKey(sessionId);
+  const stored = await bridgeStorageGet([purchaseHistoryKey]);
 
   return {
-    purchaseHistorySummary: stored[PURCHASE_HISTORY_SUMMARY_KEY] || null,
-    missingContentSummary: stored[MISSING_CONTENT_SUMMARY_KEY] || null,
+    purchaseHistorySummary: stored[purchaseHistoryKey] || null,
+    missingContentSummary: null,
   };
+}
+
+export async function clearStoredPurchaseAnalytics(sessionId = "") {
+  const purchaseHistoryKey = getPurchaseHistorySessionKey(sessionId);
+
+  if (!sessionId) {
+    return null;
+  }
+
+  return bridgeStorageRemove([purchaseHistoryKey]);
 }
 
 export async function syncMissingContentSummary(options = {}) {
@@ -426,9 +436,17 @@ export function formatSyncTime(value) {
   }).format(parsed);
 }
 
-export function openOrderHistoryPage() {
+export function openOrderHistoryPage(sessionId = "") {
+  const targetUrl = new URL(
+    "https://members.iracing.com/membersite/account/OrderHistory.do"
+  );
+
+  if (sessionId) {
+    targetUrl.searchParams.set("irefSession", sessionId);
+  }
+
   window.open(
-    "https://members.iracing.com/membersite/account/OrderHistory.do",
+    targetUrl.toString(),
     "_blank",
     "noopener,noreferrer"
   );

@@ -1,8 +1,8 @@
 {
   "name": "extension",
   "private": true,
-  "version": "4.1.0",
-  "displayVersion": "v4.1",
+  "version": "5.0.0",
+  "displayVersion": "v5",
   "repository": "https://github.com/nishizumi-maho/irefinedWEB",
   "type": "module",
   "scripts": {

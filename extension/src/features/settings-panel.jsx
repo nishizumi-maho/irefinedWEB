@@ -335,19 +335,6 @@ async function initSettingsPanel(activate = true) {
                   <label htmlFor="" class="iref-setting">
                     <i
                       class="icon-information text-info"
-                      title="Adds a direct Manual button to car cards in the shop and licensed-content car pages when iRacing publishes an official user manual for that car."
-                    ></i>
-                    Direct manual links on car cards
-                    <input
-                      type="checkbox"
-                      name="catalog-manual-links"
-                      checked={settings["catalog-manual-links"]}
-                      onChange={handleChange}
-                    />
-                  </label>
-                  <label htmlFor="" class="iref-setting">
-                    <i
-                      class="icon-information text-info"
                       title="Show or hide the financial snapshot widget on the main dashboard page. When left on, the values still stay hidden until you reveal them."
                     ></i>
                     Dashboard financial widget
@@ -358,10 +345,6 @@ async function initSettingsPanel(activate = true) {
                       onChange={handleChange}
                     />
                   </label>
-                  <p class="m-b-1">
-                    Desktop-only features such as auto join and auto forfeit are
-                    disabled in the browser build.
-                  </p>
                   <h4 class="m-b-1">
                     <strong>Browser UI Tweaks</strong>
                   </h4>

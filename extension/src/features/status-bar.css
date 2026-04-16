@@ -94,6 +94,24 @@
   color: rgba(238, 249, 233, 0.82);
 }
 
+.iref-registration-timer {
+  flex-shrink: 0;
+  min-width: 170px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 8px;
+  background: rgba(5, 10, 5, 0.26);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 900;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.iref-registration-timer.hidden {
+  display: none;
+}
+
 .iref-registration-banner-right {
   display: flex;
   align-items: center;

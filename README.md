@@ -12,7 +12,7 @@ Discord of the original iRefined project: https://discord.gg/hxVf8wcGaV
 If you just want to use the extension, do this:
 
 1. Open the [GitHub Releases page](https://github.com/nishizumi-maho/irefinedWEB/releases)
-2. Download the newest file named like `irefined-browser-chromium-v4.1.zip`
+2. Download the newest file named like `irefined-browser-chromium-v5.zip`
 3. Extract that zip somewhere permanent on your PC
 4. Open `chrome://extensions` in Chrome, or `edge://extensions` in Edge
 5. Enable `Developer mode`
@@ -33,14 +33,35 @@ Quick notes:
 - Official series register and withdraw helpers
 - Queueing race and qualifying sessions from the web UI
 - Direct practice registration when the iRacing website exposes it
-- Dashboard `Budget Snapshot` with compact private mode, Order History analysis, and content catalog estimates
+- Dashboard `Budget Snapshot` with private hidden values, Order History sync, and content catalog estimates
 - Dashboard `Intelligence Center` with compact member progress, expandable detailed progress cards, and anniversary/activity tracking
-- Direct official user-manual links on supported car cards
 - Hosted and League session import/export helpers
+- Registration banner with the current registered session and visible start countdown
 - Test Drive session sharing buttons
 - UI quality-of-life tweaks for the `members-ng` layout
 
 This repository is a browser-focused fork/adaptation of the original `iRefined` project. The old desktop launcher flow is intentionally removed here. This build targets the website at `https://members-ng.iracing.com/web/*` and does not try to inject into the installed iRacing UI.
+
+## V5 Release
+
+V5 is a release built from the stable V4.1 line while treating V2 as the functional baseline for Official registration, withdraw, and queue behavior.
+
+Main changes compared with V2:
+
+- Keeps the V2 Official workflow: direct `Register` / `Withdraw`, race queue, qualifying queue, practice register when exposed by the site, `(R)` / `(Q)` queue-bar labels, and displaced-registration handling.
+- Adds the V3/V4 dashboard layer: private `Budget Snapshot`, Order History analysis, content catalog estimates, richer financial curiosities, and compact/expanded dashboard widgets.
+- Adds the V4 `Intelligence Center` for compact member progress, anniversary, activity, streak, member-since, awards, credits, license snapshots, and recent events.
+- Adds a more visible registered-session banner with a live `Starts in ...` countdown for the active registration.
+- Tightens the `Budget Snapshot` privacy model: dashboard values stay hidden, Order History sync is required before values unlock, and synced data is scoped to the active dashboard tab session.
+- Fixes V5 regressions found during testing around main-card `Withdraw`, current-session queue placement, and `Queue for the next race` behavior.
+- Removes the inactive direct car-manual setting/runtime hook because the toggle was not reliably controlling the feature.
+
+Privacy notes for V5:
+
+- The extension still uses only the `storage` permission.
+- Order History summaries are sanitized before use and do not intentionally retain order numbers, names, e-mails, tokens, credentials, or raw invoice HTML.
+- The temporary Order History bridge now uses a dashboard-session key. After the dashboard reads a synced summary, it removes that bridge copy and keeps the visible widget state in tab session storage.
+- Financial values and curiosities remain hidden until the user clicks `Reveal`.
 
 ## V4.1 Release
 
@@ -209,7 +230,6 @@ Current browser-first features:
 - dashboard `Budget Snapshot` with last-30-days compact mode
 - expanded spend and pending content estimates
 - dashboard `Intelligence Center` with compact progress overview and expandable detailed progress cards
-- direct official `Manual` links on supported car cards
 - Order History spend breakdown by category, including hosted sessions and subscriptions
 - local date-range filtering for synced Order History summaries
 - optional UI tweaks:
@@ -231,6 +251,7 @@ Known limitations:
 - practice registration is only added when `members-ng` exposes the required practice registration data
 - real paid spend requires opening Order History once so the extension can sync the local summary
 - dashboard catalog estimates use current shop pricing, not historical purchase prices
+- direct official car-manual links are currently disabled until the card integration is reliable
 - some UI placements on `members-ng` may break whenever iRacing changes the site layout
 
 In practice:
@@ -246,7 +267,7 @@ In practice:
 This is the recommended path for normal users.
 
 1. Open the [GitHub Releases page](https://github.com/nishizumi-maho/irefinedWEB/releases)
-2. Download the latest `irefined-browser-chromium-v4.1.zip` style file
+2. Download the latest `irefined-browser-chromium-v5.zip` style file
 3. Extract it
 4. Open `chrome://extensions` or `edge://extensions`
 5. Enable `Developer mode`

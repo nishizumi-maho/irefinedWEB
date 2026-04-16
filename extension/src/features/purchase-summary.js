@@ -1,5 +1,6 @@
 import features from "../feature-manager.js";
 import {
+  clearStoredPurchaseAnalytics,
   formatSyncTime,
   formatUsd,
   getContentSpend,
@@ -25,8 +26,9 @@ const id = "dashboard-purchase-summary";
 const selector = "body";
 const bodyClass = `iref-${id}`;
 const dashboardPath = "/web/racing/home/dashboard";
-const sessionStorageKey = "iref_dashboard_purchase_session_v1";
-const autoRefreshSessionKey = "iref_dashboard_purchase_autorefreshed_v1";
+const sessionStorageKey = "iref_dashboard_purchase_state_v2";
+const sessionTokenStorageKey = "iref_dashboard_purchase_session_token_v1";
+const autoRefreshSessionKey = "iref_dashboard_purchase_autorefreshed_v2";
 const state = {
   purchaseHistorySummary: null,
   missingContentSummary: null,
@@ -45,7 +47,9 @@ let financialsRevealed = false;
 let summaryExpanded = false;
 let sessionLoaded = false;
 let autoRefreshAttempted = false;
-let storedLoadAttempted = false;
+let dashboardSessionId = "";
+let historySyncRequested = false;
+let cleanupBound = false;
 
 function isDashboardPage() {
   return location.pathname === dashboardPath;
@@ -58,6 +62,71 @@ function getRoot() {
 function removeRoot() {
   getRoot()?.remove();
   cleanupDashboardWidgetRow();
+}
+
+function createSessionToken() {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  const values = new Uint32Array(4);
+  window.crypto?.getRandomValues?.(values);
+  const randomPart = [...values]
+    .map((value) => value.toString(36).padStart(7, "0"))
+    .join("");
+
+  return `iref-${Date.now()}-${randomPart}`;
+}
+
+function ensureDashboardSessionId() {
+  if (dashboardSessionId) {
+    return dashboardSessionId;
+  }
+
+  try {
+    const stored = sessionStorage.getItem(sessionTokenStorageKey);
+
+    if (stored) {
+      dashboardSessionId = stored;
+      return dashboardSessionId;
+    }
+
+    dashboardSessionId = createSessionToken();
+    sessionStorage.setItem(sessionTokenStorageKey, dashboardSessionId);
+    return dashboardSessionId;
+  } catch {
+    dashboardSessionId = createSessionToken();
+    return dashboardSessionId;
+  }
+}
+
+async function clearBudgetSnapshotSession() {
+  const sessionId = ensureDashboardSessionId();
+
+  try {
+    sessionStorage.removeItem(sessionStorageKey);
+    sessionStorage.removeItem(autoRefreshSessionKey);
+    sessionStorage.removeItem(sessionTokenStorageKey);
+  } catch {}
+
+  if (!sessionId) {
+    return;
+  }
+
+  try {
+    await clearStoredPurchaseAnalytics(sessionId);
+  } catch {}
+}
+
+function bindSessionCleanup() {
+  if (cleanupBound) {
+    return;
+  }
+
+  cleanupBound = true;
+  window.addEventListener("beforeunload", () => {
+    void clearBudgetSnapshotSession();
+  });
 }
 
 function getAnchor() {
@@ -86,20 +155,6 @@ function ensureRoot() {
         <div class="iref-dashboard-purchase-summary-copy">
           <span class="iref-dashboard-purchase-summary-label">iRefined</span>
           <h3 class="iref-dashboard-purchase-summary-title">Budget Snapshot</h3>
-          <p class="iref-dashboard-purchase-summary-subtitle">
-            Compact spend check first. Expand for total content value and what is still left to buy.
-          </p>
-          <p class="iref-dashboard-purchase-summary-cta">
-            Want the real paid amount? Click
-            <button
-              type="button"
-              id="iref-dashboard-purchase-inline-history"
-              class="iref-dashboard-purchase-summary-link"
-            >
-              here
-            </button>
-            to open Order History.
-          </p>
         </div>
         <div class="iref-dashboard-purchase-summary-actions">
           <button
@@ -131,6 +186,30 @@ function ensureRoot() {
             Order History
           </button>
         </div>
+      </div>
+      <div
+        id="iref-dashboard-purchase-sync-gate"
+        class="iref-dashboard-purchase-summary-sync-gate"
+      >
+        <div class="iref-dashboard-purchase-summary-sync-copy">
+          <span class="iref-dashboard-purchase-summary-sync-label">Sync Required</span>
+          <strong class="iref-dashboard-purchase-summary-sync-title">
+            Sync Order History to continue.
+          </strong>
+          <p
+            id="iref-dashboard-purchase-sync-note"
+            class="iref-dashboard-purchase-summary-sync-note"
+          >
+            This widget refreshes automatically when the sync finishes.
+          </p>
+        </div>
+        <button
+          type="button"
+          id="iref-dashboard-purchase-sync-open"
+          class="iref-dashboard-purchase-summary-sync-btn"
+        >
+          Open Order History
+        </button>
       </div>
       <div class="iref-dashboard-purchase-summary-compact">
         <div class="iref-dashboard-purchase-summary-card iref-dashboard-purchase-summary-card-recent">
@@ -211,12 +290,16 @@ function ensureRoot() {
     root
       .querySelector("#iref-dashboard-purchase-history")
       ?.addEventListener("click", () => {
-        openOrderHistoryPage();
+        historySyncRequested = true;
+        saveSessionState();
+        openOrderHistoryPage(ensureDashboardSessionId());
       });
     root
-      .querySelector("#iref-dashboard-purchase-inline-history")
+      .querySelector("#iref-dashboard-purchase-sync-open")
       ?.addEventListener("click", () => {
-        openOrderHistoryPage();
+        historySyncRequested = true;
+        saveSessionState();
+        openOrderHistoryPage(ensureDashboardSessionId());
       });
     root
       .querySelectorAll(
@@ -250,6 +333,7 @@ function saveSessionState() {
         missingContentError: state.missingContentError,
         financialsRevealed,
         summaryExpanded,
+        historySyncRequested,
       })
     );
   } catch {}
@@ -276,6 +360,7 @@ function loadSessionState() {
     state.missingContentError = parsed?.missingContentError || "";
     financialsRevealed = parsed?.financialsRevealed === true;
     summaryExpanded = parsed?.summaryExpanded === true;
+    historySyncRequested = parsed?.historySyncRequested === true;
   } catch {}
 }
 
@@ -317,23 +402,47 @@ function render() {
   const privacyButton = root.querySelector("#iref-dashboard-purchase-privacy");
   const expandButton = root.querySelector("#iref-dashboard-purchase-expand");
   const refreshButton = root.querySelector("#iref-dashboard-purchase-refresh");
+  const syncGate = root.querySelector("#iref-dashboard-purchase-sync-gate");
+  const syncNote = root.querySelector("#iref-dashboard-purchase-sync-note");
 
-  const recentSpend = getRecentSpend(state.purchaseHistorySummary, 30);
+  const hasPurchaseHistorySync = !!state.purchaseHistorySummary;
+  const recentSpend = hasPurchaseHistorySync
+    ? getRecentSpend(state.purchaseHistorySummary, 30)
+    : null;
   const actualContentSpend = getContentSpend(state.purchaseHistorySummary);
   const estimatedContentSpend = getOwnedCatalogValue(state.missingContentSummary);
-  const contentSpend =
-    actualContentSpend === null ? estimatedContentSpend : actualContentSpend;
-  const pendingCost = getPendingContentCost(state.missingContentSummary);
-  const curiosities = buildPriceCuriosities({
-    spendAmount: contentSpend || 0,
-    pendingAmount: pendingCost || 0,
-    totalAmount: (contentSpend || 0) + (pendingCost || 0),
-    seed: curiositySeed,
-    limit: 1,
-  });
+  const contentSpend = hasPurchaseHistorySync
+    ? actualContentSpend === null
+      ? estimatedContentSpend
+      : actualContentSpend
+    : null;
+  const pendingCost = hasPurchaseHistorySync
+    ? getPendingContentCost(state.missingContentSummary)
+    : null;
+  const curiosities = hasPurchaseHistorySync
+    ? buildPriceCuriosities({
+        spendAmount: contentSpend || 0,
+        pendingAmount: pendingCost || 0,
+        totalAmount: (contentSpend || 0) + (pendingCost || 0),
+        seed: curiositySeed,
+        limit: 1,
+      })
+    : [];
+
+  root.classList.toggle("is-sync-required", !hasPurchaseHistorySync);
+
+  if (syncGate) {
+    syncGate.hidden = hasPurchaseHistorySync;
+  }
+
+  if (syncNote) {
+    syncNote.textContent = historySyncRequested
+      ? "Waiting for the Order History tab to finish the sync. This widget refreshes automatically."
+      : "After the sync finishes, this widget refreshes automatically.";
+  }
 
   if (recentValue) {
-    recentValue.textContent = financialsRevealed
+    recentValue.textContent = financialsRevealed && hasPurchaseHistorySync
       ? recentSpend === null
         ? "--"
         : formatUsd(recentSpend.net)
@@ -344,6 +453,10 @@ function render() {
     if (!financialsRevealed) {
       recentNote.textContent =
         "Private by default. Click this card or Reveal to show the 30-day amount.";
+    } else if (!hasPurchaseHistorySync) {
+      recentNote.textContent = historySyncRequested
+        ? "Waiting for Order History sync to finish for this dashboard tab."
+        : "Open Order History to sync the real 30-day amount for this dashboard tab.";
     } else if (recentSpend) {
       recentNote.textContent = `${recentSpend.orders} order${
         recentSpend.orders === 1 ? "" : "s"
@@ -359,7 +472,7 @@ function render() {
   }
 
   if (spendValue) {
-    spendValue.textContent = financialsRevealed
+    spendValue.textContent = financialsRevealed && hasPurchaseHistorySync
       ? contentSpend === null
         ? "--"
         : formatUsd(contentSpend)
@@ -369,6 +482,9 @@ function render() {
   if (spendNote) {
     if (!financialsRevealed) {
       spendNote.textContent = "Click this card or Reveal to show the amount.";
+    } else if (!hasPurchaseHistorySync) {
+      spendNote.textContent =
+        "Order History sync is required before Content Spend can be shown here.";
     } else if (actualContentSpend !== null && state.purchaseHistorySummary) {
       spendNote.textContent = `Order History synced ${formatSyncTime(
         state.purchaseHistorySummary.syncedAt
@@ -385,7 +501,7 @@ function render() {
   }
 
   if (pendingValue) {
-    pendingValue.textContent = financialsRevealed
+    pendingValue.textContent = financialsRevealed && hasPurchaseHistorySync
       ? pendingCost === null
         ? "--"
         : formatUsd(pendingCost)
@@ -395,11 +511,13 @@ function render() {
   if (pendingNote) {
     pendingNote.textContent = !financialsRevealed
       ? "Click this card or Reveal to show the amount."
-      : state.missingContentSummary
-        ? `Catalog synced ${formatSyncTime(state.missingContentSummary.syncedAt)}.`
-        : state.loadingPending
-          ? "Refreshing current catalog values..."
-          : "Current catalog value of unowned cars and tracks.";
+      : !hasPurchaseHistorySync
+        ? "Order History sync unlocks the pending content estimate for this tab."
+        : state.missingContentSummary
+          ? `Catalog synced ${formatSyncTime(state.missingContentSummary.syncedAt)}.`
+          : state.loadingPending
+            ? "Refreshing current catalog values..."
+            : "Current catalog value of unowned cars and tracks.";
   }
 
   if (fact) {
@@ -409,6 +527,12 @@ function render() {
       const item = document.createElement("div");
       item.className = "iref-dashboard-purchase-summary-fact-copy";
       item.textContent = "Curiosities are hidden until you reveal the financial widget.";
+      fact.appendChild(item);
+    } else if (!hasPurchaseHistorySync) {
+      const item = document.createElement("div");
+      item.className = "iref-dashboard-purchase-summary-fact-copy";
+      item.textContent =
+        "Curiosities unlock after the Order History sync finishes for this dashboard tab.";
       fact.appendChild(item);
     } else if (curiosities.length) {
       const item = document.createElement("div");
@@ -440,7 +564,9 @@ function render() {
     }
 
     if (!parts.length) {
-      if (!summaryExpanded) {
+      if (!hasPurchaseHistorySync) {
+        parts.push("");
+      } else if (!summaryExpanded) {
         parts.push(
           "Compact mode shows your last 30 days. Expand for total content value and pending content."
         );
@@ -455,15 +581,14 @@ function render() {
       }
     }
 
-    if (summaryExpanded && actualContentSpend === null && estimatedContentSpend !== null) {
+    if (
+      hasPurchaseHistorySync &&
+      summaryExpanded &&
+      actualContentSpend === null &&
+      estimatedContentSpend !== null
+    ) {
       parts.push(
         'For the paid amount instead of the estimate, open Order History by clicking <button type="button" id="iref-dashboard-purchase-status-history" class="iref-dashboard-purchase-summary-link-inline">here</button>.'
-      );
-    }
-
-    if (!state.purchaseHistorySummary) {
-      parts.push(
-        'For real 30-day and total paid spend, open Order History by clicking <button type="button" id="iref-dashboard-purchase-status-recent-history" class="iref-dashboard-purchase-summary-link-inline">here</button>.'
       );
     }
 
@@ -471,17 +596,15 @@ function render() {
     status
       .querySelector("#iref-dashboard-purchase-status-history")
       ?.addEventListener("click", () => {
-        openOrderHistoryPage();
-      });
-    status
-      .querySelector("#iref-dashboard-purchase-status-recent-history")
-      ?.addEventListener("click", () => {
-        openOrderHistoryPage();
+        historySyncRequested = true;
+        saveSessionState();
+        openOrderHistoryPage(ensureDashboardSessionId());
       });
   }
 
   if (refreshButton) {
-    refreshButton.disabled = state.loadingPending || state.loadingStored;
+    refreshButton.disabled =
+      state.loadingPending || state.loadingStored || !hasPurchaseHistorySync;
     refreshButton.textContent =
       state.loadingPending || state.loadingStored ? "Refreshing..." : "Refresh";
   }
@@ -502,19 +625,32 @@ async function loadStoredAnalytics(force = false) {
     return loadPromise;
   }
 
-  if (!force && storedLoadAttempted) {
-    return Promise.resolve(state.purchaseHistorySummary);
-  }
+  const sessionId = ensureDashboardSessionId();
 
-  storedLoadAttempted = true;
+  if (!sessionId) {
+    return Promise.resolve(null);
+  }
 
   state.loadingStored = true;
   state.purchaseHistoryError = "";
   render();
 
-  loadPromise = getStoredPurchaseAnalytics()
+  loadPromise = getStoredPurchaseAnalytics(sessionId)
     .then((stored) => {
-      state.purchaseHistorySummary = stored.purchaseHistorySummary;
+      const nextSummary = stored.purchaseHistorySummary || null;
+      const previousSyncAt = state.purchaseHistorySummary?.syncedAt || "";
+      const nextSyncAt = nextSummary?.syncedAt || "";
+
+      state.purchaseHistorySummary = nextSummary;
+
+      if (nextSummary && nextSyncAt !== previousSyncAt) {
+        historySyncRequested = false;
+      }
+
+      if (nextSummary) {
+        void clearStoredPurchaseAnalytics(sessionId);
+      }
+
       state.purchaseHistoryError = "";
     })
     .catch(() => {
@@ -569,13 +705,15 @@ function tick() {
   }
 
   loadSessionState();
+  ensureDashboardSessionId();
   render();
 
-  if (!state.purchaseHistorySummary && !state.loadingStored && !loadPromise) {
-    void loadStoredAnalytics();
+  if (!state.loadingStored && !loadPromise) {
+    void loadStoredAnalytics(true);
   }
 
   if (
+    state.purchaseHistorySummary &&
     !autoRefreshAttempted &&
     shouldAutoRefreshThisSession() &&
     !state.loadingPending &&
@@ -604,6 +742,8 @@ function init(activate = true) {
   }
 
   booted = true;
+  bindSessionCleanup();
+  ensureDashboardSessionId();
   tick();
   tickHandle = window.setInterval(tick, 1500);
 }
