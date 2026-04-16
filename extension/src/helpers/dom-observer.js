@@ -2,13 +2,8 @@ import { log } from "../features/logger.js";
 import { elementExists } from "select-dom";
 
 let watch_list = [];
-let scanQueued = false;
-let fallbackInterval = 0;
-let observer = null;
 
-function performScan() {
-  scanQueued = false;
-
+setInterval(() => {
   if (!document.body) {
     return;
   }
@@ -39,53 +34,9 @@ function performScan() {
       }
     }
   }
-}
-
-function queueScan(delay = 0) {
-  if (scanQueued) {
-    return;
-  }
-
-  scanQueued = true;
-  window.setTimeout(performScan, delay);
-}
-
-function ensureObservers() {
-  if (!observer && document.documentElement) {
-    observer = new MutationObserver(() => {
-      if (document.hidden) {
-        return;
-      }
-
-      queueScan(25);
-    });
-
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  if (!fallbackInterval) {
-    fallbackInterval = window.setInterval(() => {
-      if (document.hidden && document.body) {
-        return;
-      }
-
-      performScan();
-    }, 1000);
-  }
-}
-
-ensureObservers();
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) {
-    queueScan();
-  }
-});
+}, 300);
 
 export default function observe(id, selector, bodyClass, callback, enabled) {
   watch_list = watch_list.filter((item) => item.id !== id);
   watch_list.push({ id, selector, bodyClass, callback, enabled });
-  queueScan();
 }

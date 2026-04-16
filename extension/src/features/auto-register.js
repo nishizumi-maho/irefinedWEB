@@ -1012,7 +1012,9 @@ function alertChooseCar() {
 
 function getSelectedCar(contentId, sessionProps, section) {
   const storedCar = parseStoredCar(contentId);
-  const carSelectionProps = getCarSelectionProps(section, contentId);
+  const carSelectionProps =
+    getCarSelectionProps(section, contentId) ||
+    (section !== document ? getCarSelectionProps(document, contentId) : null);
   const cars = Array.isArray(carSelectionProps?.cars) ? carSelectionProps.cars : [];
   const carClassIds = Array.isArray(carSelectionProps?.carClassIds)
     ? carSelectionProps.carClassIds
@@ -1023,6 +1025,8 @@ function getSelectedCar(contentId, sessionProps, section) {
   }
 
   if (!carSelectionProps) {
+    log(`🚫 No car selection context found for series ${contentId}`);
+    alertChooseCar();
     return null;
   }
 
@@ -1472,6 +1476,7 @@ function syncTopQueueButtonList(buttonsEl, entries, labelForEntry) {
   entries.forEach((entry, index) => {
     const { sessionProps, slot, section } = entry;
     const eventType = getSessionEventType(sessionProps.session);
+    const label = labelForEntry(entry, index);
     const slotKey = makeQueueSlotKey(
       sessionProps.contentId,
       eventType,
@@ -1482,42 +1487,46 @@ function syncTopQueueButtonList(buttonsEl, entries, labelForEntry) {
     );
 
     if (!button) {
-      const label = labelForEntry(entry, index);
       button = createQueueButton(
         `${slugify(String(sessionProps.contentId))}-${slugify(String(eventType))}-${slugify(slot.start_time)}-top`,
         label
       );
       button.classList.add("iref-queue-btn-top");
-      button.dataset.irefIdleLabel = label;
-      button.dataset.irefQueueKey = slotKey;
       button.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
-
-        const currentQueueItem = getQueueItem(
-          sessionProps.contentId,
-          slot.start_time,
-          eventType
-        );
-
-        if (currentQueueItem?.status === "found") {
-          activateQueueItem(
-            findQueueIndex(sessionProps.contentId, slot.start_time, eventType),
-            { manual: true }
-          );
-          return;
-        }
-
-        if (currentQueueItem) {
-          removeQueueItem(currentQueueItem);
-          return;
-        }
-
-        queueSlot(sessionProps, slot, button, section);
+        handleQueueButtonAction(button, sessionProps, slot, section);
       });
-      buttonsEl.appendChild(button);
     }
+
+    button.dataset.irefIdleLabel = label;
+    button.dataset.irefQueueKey = slotKey;
+    buttonsEl.appendChild(button);
   });
+}
+
+function handleQueueButtonAction(button, sessionProps, slot, section) {
+  const eventType = getSessionEventType(sessionProps.session);
+  const currentQueueItem = getQueueItem(
+    sessionProps.contentId,
+    slot.start_time,
+    eventType
+  );
+
+  if (currentQueueItem?.status === "found") {
+    activateQueueItem(
+      findQueueIndex(sessionProps.contentId, slot.start_time, eventType),
+      { manual: true }
+    );
+    return;
+  }
+
+  if (currentQueueItem) {
+    removeQueueItem(currentQueueItem);
+    return;
+  }
+
+  queueSlot(sessionProps, slot, button, section);
 }
 
 function ensureTopQueueButtons(section, sessionProps) {
@@ -1558,11 +1567,13 @@ function ensureTopQueueButtons(section, sessionProps) {
     "Qualify Queue",
     "Upcoming qualify sessions"
   );
+  const topActionMode = getDirectRegisterMode(section, sessionProps).mode;
   const currentStartTime = new Date(sessionProps.session.start_time).toISOString();
   const raceSlots = getQueueSlots(section, sessionProps)
     .filter((slot) =>
-      canDirectRegisterSession(sessionProps) ||
-      new Date(slot.start_time).toISOString() !== currentStartTime
+      topActionMode === "withdraw"
+        ? new Date(slot.start_time).toISOString() !== currentStartTime
+        : true
     )
     .map((slot) => ({ sessionProps, slot, section }));
   const qualifyEntries = collectSessionQueueEntries(isQualifySession, [nextRace?.button]);
@@ -2029,14 +2040,20 @@ function sendDirectWithdraw() {
   return requestCurrentSessionWithdraw();
 }
 
+function handleDirectWithdraw(button, section) {
+  if (!sendDirectWithdraw()) {
+    return;
+  }
+
+  section.dataset.irefRegistrationMode = "register";
+  syncActionButtonState(button, "register", null, true);
+}
+
 function handleDirectRegister(button, section, sessionProps, registerableProps) {
   const currentMode = getDirectRegisterMode(section, sessionProps);
 
   if (currentMode.mode === "withdraw") {
-    if (sendDirectWithdraw()) {
-      section.dataset.irefRegistrationMode = "register";
-      syncActionButtonState(button, "register", null, true);
-    }
+    handleDirectWithdraw(button, section);
     return;
   }
 
@@ -2066,31 +2083,24 @@ function handleDirectRegister(button, section, sessionProps, registerableProps) 
 }
 
 function handleTopQueueClick(button, section, sessionProps) {
-  const slot = {
-    label: "next race",
-    start_time: new Date(sessionProps.session.start_time).toISOString(),
-  };
-  const eventType = getSessionEventType(sessionProps.session);
-  const currentQueueItem = getQueueItem(
-    sessionProps.contentId,
-    slot.start_time,
-    eventType
+  const mirroredRaceQueueButton = section.querySelector(
+    '[data-iref-queue-group="race"] .iref-top-queue-buttons [data-iref-queue-key]'
   );
 
-  if (currentQueueItem?.status === "found") {
-    activateQueueItem(
-      findQueueIndex(sessionProps.contentId, slot.start_time, eventType),
-      { manual: true }
-    );
+  if (mirroredRaceQueueButton && mirroredRaceQueueButton !== button) {
+    mirroredRaceQueueButton.click();
     return;
   }
 
-  if (currentQueueItem) {
-    removeQueueItem(currentQueueItem);
-    return;
-  }
-
-  queueSlot(sessionProps, slot, button, section);
+  handleQueueButtonAction(
+    button,
+    sessionProps,
+    {
+      label: "next race",
+      start_time: new Date(sessionProps.session.start_time).toISOString(),
+    },
+    section
+  );
 }
 
 function ensureDirectRegisterButtons(section, sessionProps) {
@@ -2128,7 +2138,7 @@ function ensureDirectRegisterButtons(section, sessionProps) {
 
   section.dataset.irefRegistrationMode = mode;
 
-  if (mode === "register" && !canRegister) {
+  if (mode !== "withdraw" && !canRegister) {
     const startTime = new Date(sessionProps.session.start_time).toISOString();
     const eventType = getSessionEventType(sessionProps.session);
     const queueSlotKey = makeQueueSlotKey(sessionProps.contentId, eventType, startTime);
@@ -2157,11 +2167,19 @@ function ensureDirectRegisterButtons(section, sessionProps) {
   delete primaryButton.dataset.irefQueueKey;
   delete primaryButton.dataset.irefIdleLabel;
   syncActionButtonState(primaryButton, mode, registrationState, canRegister);
-  primaryButton.onclick = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    handleDirectRegister(primaryButton, section, sessionProps, registerableProps);
-  };
+  if (mode === "withdraw") {
+    primaryButton.onclick = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      handleDirectWithdraw(primaryButton, section);
+    };
+  } else {
+    primaryButton.onclick = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      handleDirectRegister(primaryButton, section, sessionProps, registerableProps);
+    };
+  }
 
   secondaryButton.classList.add("hidden");
   secondaryButton.textContent = "";
@@ -2212,16 +2230,24 @@ function ensureSessionRegisterButton(nativeButton, sessionProps, section) {
     mode === "register"
       ? `Register for this ${getSessionEventName(sessionProps.session).toLowerCase()} session from the browser.`
       : registerButton.title;
-  registerButton.onclick = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    handleDirectRegister(
-      registerButton,
-      contextSection,
-      sessionProps,
-      sessionProps
-    );
-  };
+  if (mode === "withdraw") {
+    registerButton.onclick = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      handleDirectWithdraw(registerButton, contextSection);
+    };
+  } else {
+    registerButton.onclick = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      handleDirectRegister(
+        registerButton,
+        contextSection,
+        sessionProps,
+        sessionProps
+      );
+    };
+  }
 }
 
 function ensureSessionQueueButtons(section, options = {}) {

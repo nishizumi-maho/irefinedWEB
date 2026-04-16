@@ -25,6 +25,7 @@ const uiRootEl = (
           <div className="iref-registration-subtitle"></div>
         </div>
       </div>
+      <div className="iref-registration-timer hidden"></div>
       <div className="iref-registration-banner-right"></div>
     </div>
     <div className="iref-bar-wrapper">
@@ -144,6 +145,36 @@ function getCurrentCarName(section) {
   return candidate;
 }
 
+function buildStartTimeFromVisibleLabel(label) {
+  const match = normalizeText(label).match(/^(\d{1,2}):(\d{2})$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const now = new Date(getCurrentTime());
+  const candidate = new Date(now);
+  candidate.setHours(parseInt(match[1], 10), parseInt(match[2], 10), 0, 0);
+
+  if (candidate.getTime() < now.getTime() - 2 * 60 * 60 * 1000) {
+    candidate.setDate(candidate.getDate() + 1);
+  }
+
+  return candidate.toISOString();
+}
+
+function getCurrentStartTime(section) {
+  if (!section) {
+    return null;
+  }
+
+  const label = getTextLines(section.innerText || "").find((line) =>
+    /^\d{1,2}:\d{2}$/.test(line)
+  );
+
+  return label ? buildStartTimeFromVisibleLabel(label) : null;
+}
+
 function getSiteRegistrationState() {
   if (isCurrentPageWithdrawPending()) {
     return null;
@@ -169,6 +200,7 @@ function getSiteRegistrationState() {
     source: "site",
     season_name: getCurrentSeriesName() || null,
     car_name: getCurrentCarName(nextRaceSection || actionSection),
+    start_time: getCurrentStartTime(nextRaceSection || actionSection),
     withdrawAction,
     joinAction:
       (nextRaceSection &&
@@ -201,6 +233,7 @@ function getRegistrationBannerState() {
     return confirmRegistrationState({
       season_name: siteState.season_name || storedState?.season_name || null,
       car_name: siteState.car_name || storedState?.car_name || null,
+      start_time: siteState.start_time || storedState?.start_time || null,
     });
   }
 
@@ -248,6 +281,40 @@ function formatRegistrationSubtitle(state) {
   return "You are registered for your race session.";
 }
 
+function formatSessionStartCountdown(targetTime) {
+  const target = new Date(targetTime);
+  const targetMs = target.getTime();
+
+  if (!Number.isFinite(targetMs)) {
+    return "";
+  }
+
+  const diff = targetMs - getCurrentTime();
+
+  if (diff <= 0) {
+    return "Starts now";
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+  if (days > 0) {
+    return `Starts in ${days}d ${hours}h ${minutes}m`;
+  }
+
+  if (hours > 0) {
+    return `Starts in ${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  if (minutes > 0) {
+    return `Starts in ${minutes}m ${seconds}s`;
+  }
+
+  return `Starts in ${seconds}s`;
+}
+
 function renderActionButton(label, className, onClick) {
   const button = document.createElement("button");
   button.type = "button";
@@ -266,6 +333,7 @@ function syncRegistrationBanner() {
   const titleEl = banner.querySelector(".iref-registration-title");
   const subtitleEl = banner.querySelector(".iref-registration-subtitle");
   const pillEl = banner.querySelector(".iref-registration-pill");
+  const timerEl = banner.querySelector(".iref-registration-timer");
   const actionsEl = banner.querySelector(".iref-registration-banner-right");
   const registrationState = getRegistrationBannerState();
   const siteState = getSiteRegistrationState();
@@ -285,6 +353,9 @@ function syncRegistrationBanner() {
   pillEl.textContent = registrationState.status === "registering" ? "Registering" : "Registered";
   titleEl.textContent = formatRegistrationTitle(registrationState);
   subtitleEl.textContent = formatRegistrationSubtitle(registrationState);
+  const timerText = formatSessionStartCountdown(registrationState.start_time);
+  timerEl.textContent = timerText;
+  timerEl.classList.toggle("hidden", !timerText);
   banner.classList.toggle("is-registering", registrationState.status === "registering");
   banner.classList.remove("hidden");
 
