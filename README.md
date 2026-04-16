@@ -12,7 +12,7 @@ Discord of the original iRefined project: https://discord.gg/hxVf8wcGaV
 If you just want to use the extension, do this:
 
 1. Open the [GitHub Releases page](https://github.com/nishizumi-maho/irefinedWEB/releases)
-2. Download the newest file named like `irefined-browser-chromium-v5.zip`
+2. Download the newest file named like `irefined-browser-chromium-v5.1.zip`
 3. Extract that zip somewhere permanent on your PC
 4. Open `chrome://extensions` in Chrome, or `edge://extensions` in Edge
 5. Enable `Developer mode`
@@ -41,6 +41,18 @@ Quick notes:
 - UI quality-of-life tweaks for the `members-ng` layout
 
 This repository is a browser-focused fork/adaptation of the original `iRefined` project. The old desktop launcher flow is intentionally removed here. This build targets the website at `https://members-ng.iracing.com/web/*` and does not try to inject into the installed iRacing UI.
+
+## V5.1 Release
+
+V5.1 is a focused hotfix on top of V5.
+
+Main changes since V5:
+
+- Fixes `Budget Snapshot` losing synced Order History data after returning to the dashboard.
+- Keeps synced dashboard budget data available while the same dashboard tab session remains alive.
+- Prevents empty temporary bridge reads from replacing a valid synced summary with an empty state.
+- Removes unload-time dashboard cleanup that could discard the per-tab sync token during normal navigation to Order History.
+- Keeps the existing privacy model: budget values stay hidden until `Reveal`, visible state remains tab-scoped, and the temporary Order History bridge copy is removed after the dashboard reads it.
 
 ## V5 Release
 

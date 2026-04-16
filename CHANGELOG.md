@@ -1,5 +1,26 @@
 # Changelog
 
+## V5.1 - 2026-04-16
+
+### Fixed
+
+- Fixed `Budget Snapshot` returning to the sync-required state after Order History had already synced for the dashboard tab.
+- Empty temporary bridge reads no longer clear a valid synced Order History summary from the dashboard session.
+- Removed unload-time dashboard cleanup so normal navigation to Order History does not discard the per-tab sync token.
+
+### Privacy
+
+- Financial values remain hidden by default.
+- Dashboard financial state remains tab-scoped through `sessionStorage`.
+- Temporary Order History bridge data is still removed after the dashboard reads it.
+
+### Validation
+
+- `node --check` on the changed runtime file.
+- `npm run build`.
+- `npm audit --omit=dev`.
+- Source scan for common secret/token/private-data patterns.
+
 ## V5 - 2026-04-16
 
 V5 is prepared from the stable V4.1 line and compares its user-facing scope against V2, because V2 is the known-good baseline for Official register, withdraw, and queue behavior.
