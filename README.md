@@ -4,15 +4,15 @@
 >
 > This repository is a browser-only helper layer for the public `members-ng` website. It does **not** inject into the installed iRacing UI, does **not** rely on closed Electron/devtools ports, does **not** attach to the local sim client, does **not** automate driving inputs, and does **not** attempt to bypass authentication or security controls. The intent of this fork is to provide UI helpers on top of the existing logged-in website experience only, using actions and state already exposed through `members-ng`. If any behavior here is considered incompatible with current iRacing policy, please open an issue or contact the maintainer so it can be adjusted cooperatively.
 
-**This repository and its contributors are not affiliated with iRefined. This repository was a fork of iRefined initially.
-**Discord of the original iRefined project: https://discord.gg/hxVf8wcGaV
+**This repository and its contributors are not affiliated with iRefined. This repository started as a fork of iRefined.**
+Discord of the original iRefined project: https://discord.gg/hxVf8wcGaV
 
 ## ⚡ Quick Install (GitHub Releases)
 
 If you just want to use the extension, do this:
 
-1. Open the [V3 experimental release](https://github.com/nishizumi-maho/irefinedWEB/releases/tag/v3)
-2. Download the file named like `irefined-browser-chromium-v3.zip`
+1. Open the [GitHub Releases page](https://github.com/nishizumi-maho/irefinedWEB/releases)
+2. Download the newest file named like `irefined-browser-chromium-v4.zip`
 3. Extract that zip somewhere permanent on your PC
 4. Open `chrome://extensions` in Chrome, or `edge://extensions` in Edge
 5. Enable `Developer mode`
@@ -33,35 +33,34 @@ Quick notes:
 - Official series register and withdraw helpers
 - Queueing race and qualifying sessions from the web UI
 - Direct practice registration when the iRacing website exposes it
-- Dashboard spend widget with compact private mode, Order History analysis, and content catalog estimates
+- Dashboard `Budget Snapshot` with compact private mode, Order History analysis, and content catalog estimates
+- Dashboard `Intelligence Center` with compact member progress, expandable detailed progress cards, and anniversary/activity tracking
+- Direct official user-manual links on supported car cards
 - Hosted and League session import/export helpers
 - Test Drive session sharing buttons
 - UI quality-of-life tweaks for the `members-ng` layout
 
 This repository is a browser-focused fork/adaptation of the original `iRefined` project. The old desktop launcher flow is intentionally removed here. This build targets the website at `https://members-ng.iracing.com/web/*` and does not try to inject into the installed iRacing UI.
 
-## V3 Experimental Release
+## V4 Release
 
-V3 is an experimental release focused on ownership/spend visibility and update discoverability while keeping financial values private by default.
+V4 adds a second generation of dashboard tools while keeping the browser-only scope intact.
 
-Main changes since V2:
+Main changes since V3:
 
-- Added a dashboard `Budget Snapshot` widget.
-- The widget opens in compact mode and shows the last 30 days of spend after Order History has been synced.
-- All financial values and price curiosities are hidden by default. Click `Reveal` to show them and `Hide` to cover them again.
-- The expanded widget shows total content spend and the estimated pending cost for unowned cars and tracks.
-- Added an Order History analyzer with spending categories, hosted session totals, subscriptions, gifts, credits, and date-range filters.
-- Added rotating price curiosities that compare content spend and pending catalog value with real-world racing-related items.
-- Added a more visible in-page update popup when a newer release is detected.
-- Added a narrow storage bridge so dashboard pages and Order History can share only approved local summary keys.
-- Removed the first-run welcome page. The dashboard widget is enabled by default, compact by default, and private by default.
+- Added a dashboard `Intelligence Center` focused on member progress, anniversary timing, recent 30-day activity, streaks, awards, participation credits, license snapshots, and recent events.
+- The `Intelligence Center` opens compact by default and can be expanded with `Expand` / `Compact`.
+- Added direct official car `Manual` links on supported shop and licensed-content car cards.
+- Added automatic one-time dashboard refresh behavior per tab session for the dashboard widgets so the page does not keep re-syncing repeatedly while open.
+- Kept the `Budget Snapshot` private by default and reduced its footprint to work better beside the new dashboard panel.
+- Improved update discoverability and kept the in-page GitHub release check flow.
 
-Privacy notes for V3:
+Privacy notes for V4:
 
-- Financial summaries are stored locally in the browser through `chrome.storage.local`.
-- The Order History summary stores sanitized dates, categories, and amounts needed for totals and filters.
-- Order numbers, names, e-mails, tokens, and credentials are not intentionally stored by the V3 spend tools.
-- The financial widget can be disabled entirely from the iRefined settings panel.
+- The extension still uses only the minimal `storage` permission.
+- Order History purchase summaries remain sanitized before storage and do not intentionally keep order numbers, names, e-mails, tokens, credentials, or raw invoice HTML.
+- Dashboard runtime widget state now prefers per-tab session persistence for compact/expanded state and one-time refresh behavior.
+- No hardcoded secrets or personal account credentials are intentionally stored by the V4 dashboard tools.
 
 ## V2 Release
 
@@ -182,8 +181,10 @@ Current browser-first features:
 - Hosted and League `Create a Race` session import/export
 - page-level export helpers for supported pages
 - Test Drive session sharing buttons
-- dashboard financial snapshot with last-30-days compact mode
-- expanded content spend and pending catalog estimates
+- dashboard `Budget Snapshot` with last-30-days compact mode
+- expanded spend and pending content estimates
+- dashboard `Intelligence Center` with compact progress overview and expandable detailed progress cards
+- direct official `Manual` links on supported car cards
 - Order History spend breakdown by category, including hosted sessions and subscriptions
 - local date-range filtering for synced Order History summaries
 - optional UI tweaks:
@@ -219,8 +220,8 @@ In practice:
 
 This is the recommended path for normal users.
 
-1. Open the [V3 experimental release](https://github.com/nishizumi-maho/irefinedWEB/releases/tag/v3)
-2. Download the latest `irefined-browser-chromium-v3.zip` style file
+1. Open the [GitHub Releases page](https://github.com/nishizumi-maho/irefinedWEB/releases)
+2. Download the latest `irefined-browser-chromium-v4.zip` style file
 3. Extract it
 4. Open `chrome://extensions` or `edge://extensions`
 5. Enable `Developer mode`

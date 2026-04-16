@@ -4,6 +4,7 @@ const bridgeTimeoutMs = 5000;
 
 export const PURCHASE_HISTORY_SUMMARY_KEY = "iref_purchase_history_summary";
 export const MISSING_CONTENT_SUMMARY_KEY = "iref_missing_content_summary";
+export const MEMBERSHIP_SUMMARY_KEY = "iref_membership_summary";
 
 function createRequestId() {
   return `iref-${Date.now()}-${Math.random().toString(36).slice(2)}`;

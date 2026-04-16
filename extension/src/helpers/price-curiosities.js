@@ -41,6 +41,72 @@ const priceReferences = [
     price: 3999.95,
     detail: "for a pro-level carbon helmet",
   },
+  {
+    key: "gt3-brake-rotor",
+    label: "GT3 brake rotor",
+    price: 1180,
+    detail: "for a rough single-rotor race team estimate",
+  },
+  {
+    key: "gt4-test-day",
+    label: "club-level test day",
+    price: 480,
+    detail: "using a realistic private lapping-day budget",
+  },
+  {
+    key: "alignment-corner-balance",
+    label: "race alignment and corner-balance session",
+    price: 350,
+    detail: "for a typical performance shop estimate",
+  },
+  {
+    key: "radio-kit",
+    label: "basic race radio kit",
+    price: 525,
+    detail: "for a starter crew communication setup",
+  },
+  {
+    key: "fuel-drum",
+    label: "55-gallon drum of race fuel",
+    price: 780,
+    detail: "using a rounded current motorsport fuel estimate",
+  },
+  {
+    key: "data-subscription",
+    label: "month of pro telemetry coaching",
+    price: 99,
+    detail: "for a typical sim coaching and data package",
+  },
+  {
+    key: "pit-pass",
+    label: "weekend paddock pass",
+    price: 65,
+    detail: "for a modest club-racing weekend access price",
+  },
+  {
+    key: "set-brake-pads",
+    label: "set of race brake pads",
+    price: 420,
+    detail: "for a front-axle motorsport pad estimate",
+  },
+  {
+    key: "transponder-rental",
+    label: "weekend transponder rental",
+    price: 95,
+    detail: "for a common club-racing rental cost",
+  },
+  {
+    key: "two-post-rental",
+    label: "month of workshop lift rental",
+    price: 300,
+    detail: "for occasional shared garage use",
+  },
+  {
+    key: "pro-driver-coach-day",
+    label: "half-day with a driver coach",
+    price: 750,
+    detail: "for an advanced coaching day estimate",
+  },
 ];
 
 function formatRatio(value) {
@@ -91,12 +157,48 @@ function buildCrossFacts(spendAmount, pendingAmount, totalAmount) {
     });
   }
 
+  if (spendAmount > 0) {
+    facts.push({
+      key: "spend-vs-helmet",
+      copy: `Your current spend estimate is about ${formatRatio(
+        spendAmount / 3999.95
+      )} Bell HP7 helmets worth of content.`,
+    });
+  }
+
+  if (pendingAmount > 0) {
+    facts.push({
+      key: "pending-vs-fuel",
+      copy: `The current gap to buy everything is about ${formatRatio(
+        pendingAmount / 780
+      )} drums of race fuel.`,
+    });
+  }
+
   if (spendAmount > 0 && totalAmount > spendAmount) {
     facts.push({
       key: "upgrade-gap",
       copy: `The current gap to a full catalog is about ${formatRatio(
         (totalAmount - spendAmount) / 649
       )} Sim-Lab GT1 Pro cockpits.`,
+    });
+  }
+
+  if (spendAmount > 0 && pendingAmount > 0) {
+    facts.push({
+      key: "closing-gap",
+      copy: `At the current catalog prices, finishing the missing content would add about ${formatRatio(
+        pendingAmount / Math.max(spendAmount, 1)
+      )}x on top of what the owned content is worth today.`,
+    });
+  }
+
+  if (spendAmount > 0) {
+    facts.push({
+      key: "spend-vs-coaching",
+      copy: `Your current spend estimate would cover about ${formatRatio(
+        spendAmount / 99
+      )} months of telemetry coaching.`,
     });
   }
 
@@ -121,7 +223,7 @@ export function buildPriceCuriosities({
   pendingAmount = 0,
   totalAmount = 0,
   seed = 0,
-  limit = 3,
+  limit = 1,
 }) {
   const spend = roundCurrency(spendAmount);
   const pending = roundCurrency(pendingAmount);

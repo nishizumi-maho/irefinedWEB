@@ -322,6 +322,32 @@ async function initSettingsPanel(activate = true) {
                   <label htmlFor="" class="iref-setting">
                     <i
                       class="icon-information text-info"
+                      title="Show or hide the V4 Intelligence Center on the dashboard page. It focuses on member progress, awards, credits and recent activity."
+                    ></i>
+                    Dashboard Intelligence Center
+                    <input
+                      type="checkbox"
+                      name="dashboard-intelligence-center"
+                      checked={settings["dashboard-intelligence-center"]}
+                      onChange={handleChange}
+                    />
+                  </label>
+                  <label htmlFor="" class="iref-setting">
+                    <i
+                      class="icon-information text-info"
+                      title="Adds a direct Manual button to car cards in the shop and licensed-content car pages when iRacing publishes an official user manual for that car."
+                    ></i>
+                    Direct manual links on car cards
+                    <input
+                      type="checkbox"
+                      name="catalog-manual-links"
+                      checked={settings["catalog-manual-links"]}
+                      onChange={handleChange}
+                    />
+                  </label>
+                  <label htmlFor="" class="iref-setting">
+                    <i
+                      class="icon-information text-info"
                       title="Show or hide the financial snapshot widget on the main dashboard page. When left on, the values still stay hidden until you reveal them."
                     ></i>
                     Dashboard financial widget

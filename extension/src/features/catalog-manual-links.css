@@ -1,0 +1,22 @@
+.iref-car-manual-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  margin-left: 8px;
+  padding: 8px 12px;
+  border: 1px solid rgba(81, 112, 184, 0.55);
+  border-radius: 6px;
+  background: rgba(20, 33, 63, 0.92);
+  color: #eef4ff;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.iref-car-manual-link:hover {
+  background: rgba(28, 48, 92, 0.96);
+  color: #ffffff;
+  text-decoration: none;
+}

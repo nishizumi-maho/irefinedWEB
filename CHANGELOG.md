@@ -1,5 +1,43 @@
 # Changelog
 
+## V4 - 2026-04-15
+
+V4 expands the browser dashboard tooling while keeping the project focused on the logged-in `members-ng` website experience.
+
+### Added
+
+- Dashboard `Intelligence Center` focused on member progress.
+- Compact default `Intelligence Center` state showing member anniversary, 30-day activity, streak, and member-since timing.
+- Expandable detailed progress view with license snapshot, participation credits, recent awards, and recent events.
+- Direct official `Manual` links on supported shop and licensed-content car cards.
+- Official car-manual matching based on the public iRacing user-manual catalog.
+- Deep `members-ng` analysis report captured in `V4_SITE_DEEP_ANALYSIS.md`.
+
+### Changed
+
+- Updated extension versioning to `4.0.0` / `v4`.
+- Reduced dashboard vertical footprint by placing `Budget Snapshot` and `Intelligence Center` in a shared responsive row.
+- `Intelligence Center` now defaults to compact mode and uses `Expand` / `Compact` controls.
+- Refined the 30-day activity card to show the delta versus the previous 30 days and the active date range more clearly.
+- `Budget Snapshot` now rotates a single curiosity at a time from a larger comparison pool.
+- Dashboard widgets now auto-refresh only once per tab session and keep their UI state only for the life of that tab.
+- Removed the separate `Membership Snapshot` widget and folded the useful member-progress data into the new dashboard panel.
+
+### Privacy And Safety
+
+- The extension still requests only the `storage` permission.
+- Order History summaries remain sanitized before storage.
+- Dashboard membership/intelligence state now prefers per-tab session persistence.
+- No tracked hardcoded secrets, personal credentials, or private local paths were found during the V4 audit.
+
+### Validation
+
+- `node --check` on the main new/changed dashboard scripts.
+- `npm run build`.
+- `npm audit --omit=dev`.
+- `git diff --check`.
+- Source scan for common secret/token/private-data patterns.
+
 ## V3 Experimental - 2026-04-15
 
 V3 is an experimental release focused on dashboard spend visibility, local Order History analysis, and clearer update notices.

@@ -7,7 +7,6 @@ import {
   getPendingContentCost,
   getRecentSpend,
   getStoredPurchaseAnalytics,
-  isSyncedRecently,
   openOrderHistoryPage,
   syncMissingContentSummary,
 } from "../helpers/purchase-analytics.js";
@@ -15,15 +14,19 @@ import {
   buildPriceCuriosities,
   nextCuriositySeed,
 } from "../helpers/price-curiosities.js";
+import {
+  cleanupDashboardWidgetRow,
+  ensureDashboardWidgetRow,
+} from "../helpers/dashboard-widget-row.js";
+import "./dashboard-widget-row.css";
 import "./purchase-summary.css";
 
 const id = "dashboard-purchase-summary";
 const selector = "body";
 const bodyClass = `iref-${id}`;
 const dashboardPath = "/web/racing/home/dashboard";
-const storageRefreshMs = 10000;
-const catalogRefreshRetryMs = 60000;
-const catalogFreshMs = 1000 * 60 * 30;
+const sessionStorageKey = "iref_dashboard_purchase_session_v1";
+const autoRefreshSessionKey = "iref_dashboard_purchase_autorefreshed_v1";
 const state = {
   purchaseHistorySummary: null,
   missingContentSummary: null,
@@ -37,22 +40,12 @@ let booted = false;
 let tickHandle = 0;
 let loadPromise = null;
 let pendingPromise = null;
-let lastStorageLoadAt = 0;
-let lastCatalogAttemptAt = 0;
 const curiositySeed = nextCuriositySeed("dashboard");
 let financialsRevealed = false;
 let summaryExpanded = false;
-
-function handleWindowFocus() {
-  if (!isDashboardPage()) {
-    return;
-  }
-
-  void loadStoredAnalytics(true);
-  if (!isSyncedRecently(state.missingContentSummary, catalogFreshMs)) {
-    void refreshPendingSummary(true);
-  }
-}
+let sessionLoaded = false;
+let autoRefreshAttempted = false;
+let storedLoadAttempted = false;
 
 function isDashboardPage() {
   return location.pathname === dashboardPath;
@@ -63,19 +56,12 @@ function getRoot() {
 }
 
 function removeRoot() {
-  financialsRevealed = false;
-  summaryExpanded = false;
   getRoot()?.remove();
+  cleanupDashboardWidgetRow();
 }
 
 function getAnchor() {
-  const scroll = document.querySelector("#scroll");
-
-  if (!scroll) {
-    return null;
-  }
-
-  return scroll.querySelector(".dashboard") || scroll.firstElementChild || null;
+  return ensureDashboardWidgetRow();
 }
 
 function ensureRoot() {
@@ -83,10 +69,9 @@ function ensureRoot() {
     return null;
   }
 
-  const anchor = getAnchor();
-  const parent = anchor?.parentNode || document.querySelector("#scroll");
+  const row = getAnchor();
 
-  if (!parent) {
+  if (!row) {
     return null;
   }
 
@@ -247,13 +232,67 @@ function ensureRoot() {
       });
   }
 
-  if (anchor && root !== anchor.previousSibling) {
-    parent.insertBefore(root, anchor);
-  } else if (!root.parentNode) {
-    parent.prepend(root);
+  if (root.parentNode !== row) {
+    row.appendChild(root);
   }
 
   return root;
+}
+
+function saveSessionState() {
+  try {
+    sessionStorage.setItem(
+      sessionStorageKey,
+      JSON.stringify({
+        purchaseHistorySummary: state.purchaseHistorySummary,
+        missingContentSummary: state.missingContentSummary,
+        purchaseHistoryError: state.purchaseHistoryError,
+        missingContentError: state.missingContentError,
+        financialsRevealed,
+        summaryExpanded,
+      })
+    );
+  } catch {}
+}
+
+function loadSessionState() {
+  if (sessionLoaded) {
+    return;
+  }
+
+  sessionLoaded = true;
+
+  try {
+    const raw = sessionStorage.getItem(sessionStorageKey);
+
+    if (!raw) {
+      return;
+    }
+
+    const parsed = JSON.parse(raw);
+    state.purchaseHistorySummary = parsed?.purchaseHistorySummary || null;
+    state.missingContentSummary = parsed?.missingContentSummary || null;
+    state.purchaseHistoryError = parsed?.purchaseHistoryError || "";
+    state.missingContentError = parsed?.missingContentError || "";
+    financialsRevealed = parsed?.financialsRevealed === true;
+    summaryExpanded = parsed?.summaryExpanded === true;
+  } catch {}
+}
+
+function shouldAutoRefreshThisSession() {
+  try {
+    return sessionStorage.getItem(autoRefreshSessionKey) !== "1";
+  } catch {
+    return !autoRefreshAttempted;
+  }
+}
+
+function markAutoRefreshDone() {
+  autoRefreshAttempted = true;
+
+  try {
+    sessionStorage.setItem(autoRefreshSessionKey, "1");
+  } catch {}
 }
 
 function render() {
@@ -290,7 +329,7 @@ function render() {
     pendingAmount: pendingCost || 0,
     totalAmount: (contentSpend || 0) + (pendingCost || 0),
     seed: curiositySeed,
-    limit: 3,
+    limit: 1,
   });
 
   if (recentValue) {
@@ -372,12 +411,10 @@ function render() {
       item.textContent = "Curiosities are hidden until you reveal the financial widget.";
       fact.appendChild(item);
     } else if (curiosities.length) {
-      curiosities.forEach((entry) => {
-        const item = document.createElement("div");
-        item.className = "iref-dashboard-purchase-summary-fact-copy";
-        item.textContent = entry;
-        fact.appendChild(item);
-      });
+      const item = document.createElement("div");
+      item.className = "iref-dashboard-purchase-summary-fact-copy";
+      item.textContent = curiosities[0];
+      fact.appendChild(item);
     } else {
       const item = document.createElement("div");
       item.className = "iref-dashboard-purchase-summary-fact-copy";
@@ -456,6 +493,8 @@ function render() {
   if (expandButton) {
     expandButton.textContent = summaryExpanded ? "Compact" : "Expand";
   }
+
+  saveSessionState();
 }
 
 async function loadStoredAnalytics(force = false) {
@@ -463,15 +502,19 @@ async function loadStoredAnalytics(force = false) {
     return loadPromise;
   }
 
+  if (!force && storedLoadAttempted) {
+    return Promise.resolve(state.purchaseHistorySummary);
+  }
+
+  storedLoadAttempted = true;
+
   state.loadingStored = true;
   state.purchaseHistoryError = "";
   render();
-  lastStorageLoadAt = Date.now();
 
   loadPromise = getStoredPurchaseAnalytics()
     .then((stored) => {
       state.purchaseHistorySummary = stored.purchaseHistorySummary;
-      state.missingContentSummary = stored.missingContentSummary;
       state.purchaseHistoryError = "";
     })
     .catch(() => {
@@ -480,6 +523,7 @@ async function loadStoredAnalytics(force = false) {
     .finally(() => {
       state.loadingStored = false;
       loadPromise = null;
+      saveSessionState();
       render();
     });
 
@@ -494,9 +538,8 @@ async function refreshPendingSummary(force = false) {
   state.loadingPending = true;
   state.missingContentError = "";
   render();
-  lastCatalogAttemptAt = Date.now();
 
-  pendingPromise = syncMissingContentSummary()
+  pendingPromise = syncMissingContentSummary({ persist: false })
     .then((summary) => {
       state.missingContentSummary = summary;
       state.missingContentError = "";
@@ -508,6 +551,7 @@ async function refreshPendingSummary(force = false) {
     .finally(() => {
       state.loadingPending = false;
       pendingPromise = null;
+      saveSessionState();
       render();
     });
 
@@ -520,19 +564,20 @@ function tick() {
     return;
   }
 
+  loadSessionState();
   render();
 
-  const now = Date.now();
-
-  if (!state.loadingStored && now - lastStorageLoadAt >= storageRefreshMs) {
+  if (!state.purchaseHistorySummary && !state.loadingStored && !loadPromise) {
     void loadStoredAnalytics();
   }
 
   if (
+    !autoRefreshAttempted &&
+    shouldAutoRefreshThisSession() &&
     !state.loadingPending &&
-    now - lastCatalogAttemptAt >= catalogRefreshRetryMs &&
-    !isSyncedRecently(state.missingContentSummary, catalogFreshMs)
+    !pendingPromise
   ) {
+    markAutoRefreshDone();
     void refreshPendingSummary();
   }
 }
@@ -546,7 +591,6 @@ function init(activate = true) {
       tickHandle = 0;
     }
 
-    window.removeEventListener("focus", handleWindowFocus);
     booted = false;
     return;
   }
@@ -558,7 +602,6 @@ function init(activate = true) {
   booted = true;
   tick();
   tickHandle = window.setInterval(tick, 1500);
-  window.addEventListener("focus", handleWindowFocus);
 }
 
 features.add(id, true, selector, bodyClass, init);
