@@ -42,110 +42,6 @@ Quick notes:
 
 This repository is a browser-focused fork/adaptation of the original `iRefined` project. The old desktop launcher flow is intentionally removed here. This build targets the website at `https://members-ng.iracing.com/web/*` and does not try to inject into the installed iRacing UI.
 
-## V5.1 Release
-
-V5.1 is a focused hotfix on top of V5.
-
-Main changes since V5:
-
-- Fixes `Budget Snapshot` losing synced Order History data after returning to the dashboard.
-- Keeps synced dashboard budget data available while the same dashboard tab session remains alive.
-- Prevents empty temporary bridge reads from replacing a valid synced summary with an empty state.
-- Removes unload-time dashboard cleanup that could discard the per-tab sync token during normal navigation to Order History.
-- Keeps the existing privacy model: budget values stay hidden until `Reveal`, visible state remains tab-scoped, and the temporary Order History bridge copy is removed after the dashboard reads it.
-
-## V5 Release
-
-V5 is a release built from the stable V4.1 line while treating V2 as the functional baseline for Official registration, withdraw, and queue behavior.
-
-Main changes compared with V2:
-
-- Keeps the V2 Official workflow: direct `Register` / `Withdraw`, race queue, qualifying queue, practice register when exposed by the site, `(R)` / `(Q)` queue-bar labels, and displaced-registration handling.
-- Adds the V3/V4 dashboard layer: private `Budget Snapshot`, Order History analysis, content catalog estimates, richer financial curiosities, and compact/expanded dashboard widgets.
-- Adds the V4 `Intelligence Center` for compact member progress, anniversary, activity, streak, member-since, awards, credits, license snapshots, and recent events.
-- Adds a more visible registered-session banner with a live `Starts in ...` countdown for the active registration.
-- Tightens the `Budget Snapshot` privacy model: dashboard values stay hidden, Order History sync is required before values unlock, and synced data is scoped to the active dashboard tab session.
-- Fixes V5 regressions found during testing around main-card `Withdraw`, current-session queue placement, and `Queue for the next race` behavior.
-- Removes the inactive direct car-manual setting/runtime hook because the toggle was not reliably controlling the feature.
-
-Privacy notes for V5:
-
-- The extension still uses only the `storage` permission.
-- Order History summaries are sanitized before use and do not intentionally retain order numbers, names, e-mails, tokens, credentials, or raw invoice HTML.
-- The temporary Order History bridge now uses a dashboard-session key. After the dashboard reads a synced summary, it removes that bridge copy and keeps the visible widget state in tab session storage.
-- Financial values and curiosities remain hidden until the user clicks `Reveal`.
-
-## V4.1 Release
-
-V4.1 is a refinement release on top of V4.
-
-Main changes since V4:
-
-- Expanded the local `Budget Snapshot` curiosity bank substantially.
-- Expanded the `Order History` curiosity pool so date-range analysis gets much richer real-world comparisons.
-- Added many more local comparison references spanning:
-  - race entries
-  - track nights
-  - karting
-  - fuel
-  - tires
-  - brake parts
-  - safety gear
-  - travel and garage costs
-  - coaching
-  - sim hardware
-- Reworked the extension's global page scanning to be mutation-driven with a lighter fallback.
-- Reduced repeated DOM work while the tab is hidden for several dashboard and page helpers.
-- Prevented duplicate refresh intervals in the improved join-button helper.
-
-V4.1 does not change the queue/register feature scope. It is mainly a content and efficiency update.
-
-## V4 Release
-
-V4 adds a second generation of dashboard tools while keeping the browser-only scope intact.
-
-Main changes since V3:
-
-- Added a dashboard `Intelligence Center` focused on member progress, anniversary timing, recent 30-day activity, streaks, awards, participation credits, license snapshots, and recent events.
-- The `Intelligence Center` opens compact by default and can be expanded with `Expand` / `Compact`.
-- Added direct official car `Manual` links on supported shop and licensed-content car cards.
-- Added automatic one-time dashboard refresh behavior per tab session for the dashboard widgets so the page does not keep re-syncing repeatedly while open.
-- Kept the `Budget Snapshot` private by default and reduced its footprint to work better beside the new dashboard panel.
-- Improved update discoverability and kept the in-page GitHub release check flow.
-
-Privacy notes for V4:
-
-- The extension still uses only the minimal `storage` permission.
-- Order History purchase summaries remain sanitized before storage and do not intentionally keep order numbers, names, e-mails, tokens, credentials, or raw invoice HTML.
-- Dashboard runtime widget state now prefers per-tab session persistence for compact/expanded state and one-time refresh behavior.
-- No hardcoded secrets or personal account credentials are intentionally stored by the V4 dashboard tools.
-
-## V2 Release
-
-V2 focused on making the browser-side Official session workflow easier to use from the iRacing `members-ng` pages.
-
-Main changes since V1:
-
-- Added race queue buttons to upcoming race rows, including rows that use the native `View in iRacing` action.
-- Added queue support for qualifying sessions.
-- Kept the top session card as the direct `Register` or `Withdraw` action while still allowing the same open session to be queued from the upcoming sessions area.
-- Added a clearer `Race Queue` area with upcoming race session buttons.
-- Hid the top-card `View in iRacing` button in registerable, registered, and not-yet-open states so the primary action is easier to understand.
-- Replaced `Register unavailable` with `Queue for the next race` when no valid direct registration action is available yet.
-- Removed queue buttons from `Currently Racing`; that view keeps the native `View in iRacing` behavior.
-- Added direct `Register` for practice sessions only when the site exposes a valid registerable practice session id.
-- Improved registration state refresh after browser-side register and withdraw actions.
-- Added smarter queue handoff: if a queued session becomes registerable while you are already registered somewhere else, the extension withdraws the current registration before registering the queued session.
-- Added the advanced `Re-queue displaced registration` setting, disabled by default. When enabled, a displaced existing registration can be kept queued after switching into a nearer queued session.
-
-Critical fixes already rolled into this V2 release:
-
-- Restored the queue registration flow for race and qualify sessions when the site exposes a session id before the automatic 5-minute register window.
-- Synced the bottom queue bar countdown with the main `Next Race` countdown so both timers use the same clock reference.
-- Fixed local withdraw from the top status bar so the main central action updates immediately after the withdraw request.
-- Fixed session row deduplication so some users no longer see only a single future race when iRacing reuses a raw `session_id`.
-- Added `(R)` and `(Q)` markers in the queue bar so scheduled race and qualify items are easy to distinguish.
-
 ## ✨ At A Glance
 
 - 🟢 Register and withdraw from supported Official series pages
@@ -592,3 +488,111 @@ Removed from this fork:
 - local test traces and generated junk
 
 That is intentional.
+
+## Version Changelog
+
+Detailed per-version changelog files live in `changelogs/`.
+
+### V5.1 Release
+
+V5.1 is a focused hotfix on top of V5.
+
+Main changes since V5:
+
+- Fixes `Budget Snapshot` losing synced Order History data after returning to the dashboard.
+- Keeps synced dashboard budget data available while the same dashboard tab session remains alive.
+- Prevents empty temporary bridge reads from replacing a valid synced summary with an empty state.
+- Removes unload-time dashboard cleanup that could discard the per-tab sync token during normal navigation to Order History.
+- Keeps the existing privacy model: budget values stay hidden until `Reveal`, visible state remains tab-scoped, and the temporary Order History bridge copy is removed after the dashboard reads it.
+
+### V5 Release
+
+V5 is a release built from the stable V4.1 line while treating V2 as the functional baseline for Official registration, withdraw, and queue behavior.
+
+Main changes compared with V2:
+
+- Keeps the V2 Official workflow: direct `Register` / `Withdraw`, race queue, qualifying queue, practice register when exposed by the site, `(R)` / `(Q)` queue-bar labels, and displaced-registration handling.
+- Adds the V3/V4 dashboard layer: private `Budget Snapshot`, Order History analysis, content catalog estimates, richer financial curiosities, and compact/expanded dashboard widgets.
+- Adds the V4 `Intelligence Center` for compact member progress, anniversary, activity, streak, member-since, awards, credits, license snapshots, and recent events.
+- Adds a more visible registered-session banner with a live `Starts in ...` countdown for the active registration.
+- Tightens the `Budget Snapshot` privacy model: dashboard values stay hidden, Order History sync is required before values unlock, and synced data is scoped to the active dashboard tab session.
+- Fixes V5 regressions found during testing around main-card `Withdraw`, current-session queue placement, and `Queue for the next race` behavior.
+- Removes the inactive direct car-manual setting/runtime hook because the toggle was not reliably controlling the feature.
+
+Privacy notes for V5:
+
+- The extension still uses only the `storage` permission.
+- Order History summaries are sanitized before use and do not intentionally retain order numbers, names, e-mails, tokens, credentials, or raw invoice HTML.
+- The temporary Order History bridge now uses a dashboard-session key. After the dashboard reads a synced summary, it removes that bridge copy and keeps the visible widget state in tab session storage.
+- Financial values and curiosities remain hidden until the user clicks `Reveal`.
+
+### V4.1 Release
+
+V4.1 is a refinement release on top of V4.
+
+Main changes since V4:
+
+- Expanded the local `Budget Snapshot` curiosity bank substantially.
+- Expanded the `Order History` curiosity pool so date-range analysis gets much richer real-world comparisons.
+- Added many more local comparison references spanning:
+  - race entries
+  - track nights
+  - karting
+  - fuel
+  - tires
+  - brake parts
+  - safety gear
+  - travel and garage costs
+  - coaching
+  - sim hardware
+- Reworked the extension's global page scanning to be mutation-driven with a lighter fallback.
+- Reduced repeated DOM work while the tab is hidden for several dashboard and page helpers.
+- Prevented duplicate refresh intervals in the improved join-button helper.
+
+V4.1 does not change the queue/register feature scope. It is mainly a content and efficiency update.
+
+### V4 Release
+
+V4 adds a second generation of dashboard tools while keeping the browser-only scope intact.
+
+Main changes since V3:
+
+- Added a dashboard `Intelligence Center` focused on member progress, anniversary timing, recent 30-day activity, streaks, awards, participation credits, license snapshots, and recent events.
+- The `Intelligence Center` opens compact by default and can be expanded with `Expand` / `Compact`.
+- Added direct official car `Manual` links on supported shop and licensed-content car cards.
+- Added automatic one-time dashboard refresh behavior per tab session for the dashboard widgets so the page does not keep re-syncing repeatedly while open.
+- Kept the `Budget Snapshot` private by default and reduced its footprint to work better beside the new dashboard panel.
+- Improved update discoverability and kept the in-page GitHub release check flow.
+
+Privacy notes for V4:
+
+- The extension still uses only the minimal `storage` permission.
+- Order History purchase summaries remain sanitized before storage and do not intentionally keep order numbers, names, e-mails, tokens, credentials, or raw invoice HTML.
+- Dashboard runtime widget state now prefers per-tab session persistence for compact/expanded state and one-time refresh behavior.
+- No hardcoded secrets or personal account credentials are intentionally stored by the V4 dashboard tools.
+
+### V2 Release
+
+V2 focused on making the browser-side Official session workflow easier to use from the iRacing `members-ng` pages.
+
+Main changes since V1:
+
+- Added race queue buttons to upcoming race rows, including rows that use the native `View in iRacing` action.
+- Added queue support for qualifying sessions.
+- Kept the top session card as the direct `Register` or `Withdraw` action while still allowing the same open session to be queued from the upcoming sessions area.
+- Added a clearer `Race Queue` area with upcoming race session buttons.
+- Hid the top-card `View in iRacing` button in registerable, registered, and not-yet-open states so the primary action is easier to understand.
+- Replaced `Register unavailable` with `Queue for the next race` when no valid direct registration action is available yet.
+- Removed queue buttons from `Currently Racing`; that view keeps the native `View in iRacing` behavior.
+- Added direct `Register` for practice sessions only when the site exposes a valid registerable practice session id.
+- Improved registration state refresh after browser-side register and withdraw actions.
+- Added smarter queue handoff: if a queued session becomes registerable while you are already registered somewhere else, the extension withdraws the current registration before registering the queued session.
+- Added the advanced `Re-queue displaced registration` setting, disabled by default. When enabled, a displaced existing registration can be kept queued after switching into a nearer queued session.
+
+Critical fixes already rolled into this V2 release:
+
+- Restored the queue registration flow for race and qualify sessions when the site exposes a session id before the automatic 5-minute register window.
+- Synced the bottom queue bar countdown with the main `Next Race` countdown so both timers use the same clock reference.
+- Fixed local withdraw from the top status bar so the main central action updates immediately after the withdraw request.
+- Fixed session row deduplication so some users no longer see only a single future race when iRacing reuses a raw `session_id`.
+- Added `(R)` and `(Q)` markers in the queue bar so scheduled race and qualify items are easy to distinguish.
