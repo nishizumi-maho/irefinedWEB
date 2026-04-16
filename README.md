@@ -12,7 +12,7 @@ Discord of the original iRefined project: https://discord.gg/hxVf8wcGaV
 If you just want to use the extension, do this:
 
 1. Open the [GitHub Releases page](https://github.com/nishizumi-maho/irefinedWEB/releases)
-2. Download the newest file named like `irefined-browser-chromium-v4.zip`
+2. Download the newest file named like `irefined-browser-chromium-v4.1.zip`
 3. Extract that zip somewhere permanent on your PC
 4. Open `chrome://extensions` in Chrome, or `edge://extensions` in Edge
 5. Enable `Developer mode`
@@ -41,6 +41,31 @@ Quick notes:
 - UI quality-of-life tweaks for the `members-ng` layout
 
 This repository is a browser-focused fork/adaptation of the original `iRefined` project. The old desktop launcher flow is intentionally removed here. This build targets the website at `https://members-ng.iracing.com/web/*` and does not try to inject into the installed iRacing UI.
+
+## V4.1 Release
+
+V4.1 is a refinement release on top of V4.
+
+Main changes since V4:
+
+- Expanded the local `Budget Snapshot` curiosity bank substantially.
+- Expanded the `Order History` curiosity pool so date-range analysis gets much richer real-world comparisons.
+- Added many more local comparison references spanning:
+  - race entries
+  - track nights
+  - karting
+  - fuel
+  - tires
+  - brake parts
+  - safety gear
+  - travel and garage costs
+  - coaching
+  - sim hardware
+- Reworked the extension's global page scanning to be mutation-driven with a lighter fallback.
+- Reduced repeated DOM work while the tab is hidden for several dashboard and page helpers.
+- Prevented duplicate refresh intervals in the improved join-button helper.
+
+V4.1 does not change the queue/register feature scope. It is mainly a content and efficiency update.
 
 ## V4 Release
 
@@ -221,7 +246,7 @@ In practice:
 This is the recommended path for normal users.
 
 1. Open the [GitHub Releases page](https://github.com/nishizumi-maho/irefinedWEB/releases)
-2. Download the latest `irefined-browser-chromium-v4.zip` style file
+2. Download the latest `irefined-browser-chromium-v4.1.zip` style file
 3. Extract it
 4. Open `chrome://extensions` or `edge://extensions`
 5. Enable `Developer mode`
