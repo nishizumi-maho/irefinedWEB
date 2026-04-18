@@ -1,0 +1,16 @@
+### iRefined Browser Wiki
+
+- [Home](Home)
+- [Installation and Updates](Installation-and-Updates)
+- [Architecture](Architecture)
+- [Feature Index](Feature-Index)
+- [Session Registration and Queue](Session-Registration-and-Queue)
+- [Dashboard Budget Snapshot](Dashboard-Budget-Snapshot)
+- [Dashboard Intelligence Center](Dashboard-Intelligence-Center)
+- [Session Sharing and Exports](Session-Sharing-and-Exports)
+- [Order History and Data Bridge](Order-History-and-Data-Bridge)
+- [Settings and Storage](Settings-and-Storage)
+- [Privacy, Security, and Data Handling](Privacy-Security-and-Data-Handling)
+- [Build, Release, and CI](Build-Release-and-CI)
+- [Source Map](Source-Map)
+- [Troubleshooting](Troubleshooting)
