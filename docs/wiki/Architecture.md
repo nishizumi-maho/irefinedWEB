@@ -47,9 +47,18 @@ Three features are effectively always-on even when not user-toggleable:
 
 ## DOM Observation Model
 
-The project does not depend on a heavy constant full-page loop as the primary model.
+The project does not use a MutationObserver-based activation layer in the current stable line.
 
-Instead, `helpers/dom-observer.js` watches page mutations and lets each feature activate when its selector appears. Some features also keep lightweight refresh intervals when they need to maintain state against a changing React UI.
+Instead, `helpers/dom-observer.js` keeps a feature watch list and polls selectors every `300ms`.
+
+For each feature it:
+
+- checks whether the selector exists
+- checks whether the feature is enabled
+- adds or removes the feature body class
+- invokes the callback on enter or leave
+
+This is important because the maintenance cost and runtime profile are shaped by that polling loop.
 
 ## React Data Access
 
@@ -75,16 +84,22 @@ Used for:
 - extension settings
 - cached release-check data
 - queue persistence and related runtime flags
+- per-series selected car choices
+- curiosity seed rotation
 
 ### 2. `sessionStorage`
 
 Used where per-tab lifetime matters, especially dashboard widget state for the Budget Snapshot.
+
+It is also used for one-tab-only update popup memory.
 
 ### 3. `chrome.storage.local`
 
 Used via the bridge on page contexts that need extension storage access from page-world scripts.
 
 This is intentionally scoped to specific keys rather than a general-purpose arbitrary storage bridge.
+
+For a detailed key reference, see [Data Contracts and Storage Keys](Data-Contracts-and-Storage-Keys).
 
 ## Financial / Order History Data Path
 
@@ -118,3 +133,12 @@ This keeps the Budget Snapshot and Intelligence Center visually organized on the
 The repo builds a static browser-extension output in `extension/dist/`.
 
 GitHub Actions package the built output into release zips and attach them to GitHub Releases.
+
+## Recommended Companion Pages
+
+This page is the overview. The detailed deep-dive pages are:
+
+- [Runtime Boot and Integration](Runtime-Boot-and-Integration)
+- [Official Workflow Deep Dive](Official-Workflow-Deep-Dive)
+- [Dashboard Widget Data Flow](Dashboard-Widget-Data-Flow)
+- [Helper Modules Reference](Helper-Modules-Reference)
