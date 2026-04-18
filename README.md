@@ -36,11 +36,22 @@ The wiki is the primary technical reference. It documents the architecture, feat
 - update notice when a newer GitHub release is available
 - browser-side UI quality-of-life tweaks for `members-ng`
 
-## Browser Support
+## ✨ At A Glance
 
-The stable release target is Chromium-based browsers using the unpacked package from GitHub Releases.
+- 🟢 Register and withdraw from supported Official series pages
+- ⏳ Queue future sessions and let the extension handle the switch near race time
+- 💵 Check recent and total content spend privately from the dashboard
+- 📦 Export/import `session.json` for Hosted and League setup reuse
+- 🔔 Get a queue notification sound when the new registration lands
+- 🧰 Apply small UI quality-of-life tweaks directly on `members-ng`
 
-Supported target:
+## 🌐 Browser Support
+
+### Chromium browsers ✅
+
+The current release package is built for Chromium browsers.
+
+That includes the easiest targets:
 
 - Chrome
 - Edge
