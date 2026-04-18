@@ -1,5 +1,25 @@
 # Changelog
 
+## V5.2 - 2026-04-18
+
+### Fixed
+
+- Fixed the update notice showing `v5.1 is ready` while the installed extension was already on `v5.1`.
+- Cached update results are now normalized against the currently installed extension version before any popup, toolbar button, or settings notice is shown.
+- Stale cache from an older install can no longer keep prompting users for the same version after they update.
+
+### Changed
+
+- Updated extension versioning to `5.2.0` / `v5.2`.
+
+### Validation
+
+- `node --check extension/src/helpers/updates.js`.
+- `npm run build`.
+- `npm audit --omit=dev`.
+- `git diff --check`.
+- Regression check: current `5.1.0` plus cached latest `v5.1` resolves to no update, while latest `v5.2` still resolves as available.
+
 ## V5.1 - 2026-04-16
 
 ### Fixed

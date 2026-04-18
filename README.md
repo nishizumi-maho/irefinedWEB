@@ -17,7 +17,7 @@ The wiki is the primary technical reference. It documents the architecture, feat
 ## Install
 
 1. Open [Releases](https://github.com/nishizumi-maho/irefinedWEB/releases).
-2. Download the newest Chromium package, such as `irefined-browser-chromium-v5.1.zip`.
+2. Download the newest Chromium package, such as `irefined-browser-chromium-v5.2.zip`.
 3. Extract the zip to a permanent folder.
 4. Open `chrome://extensions` in Chrome or `edge://extensions` in Edge.
 5. Enable `Developer mode`.

@@ -38,6 +38,16 @@ function compareVersions(a, b) {
   return 0;
 }
 
+function getComparableLatestVersion(info = {}) {
+  const candidate =
+    info.latestTag ||
+    info.latestVersion ||
+    info.releaseName ||
+    CURRENT_DISPLAY_VERSION;
+
+  return normalizeVersion(candidate).length ? candidate : CURRENT_VERSION;
+}
+
 function getFallbackInfo(overrides = {}) {
   return {
     available: false,
@@ -52,6 +62,25 @@ function getFallbackInfo(overrides = {}) {
   };
 }
 
+function normalizeUpdateInfo(info = {}) {
+  const latestTag =
+    info.latestTag || info.latestVersion || info.releaseName || CURRENT_DISPLAY_VERSION;
+  const latestVersion = getComparableLatestVersion({
+    ...info,
+    latestTag,
+  });
+
+  return {
+    ...getFallbackInfo(),
+    ...info,
+    available: compareVersions(latestVersion, CURRENT_VERSION) > 0,
+    currentVersion: CURRENT_VERSION,
+    currentDisplayVersion: CURRENT_DISPLAY_VERSION,
+    latestTag,
+    latestVersion,
+  };
+}
+
 function readCachedInfo() {
   try {
     const parsed = JSON.parse(localStorage.getItem(CACHE_KEY));
@@ -60,10 +89,7 @@ function readCachedInfo() {
       return null;
     }
 
-    return {
-      ...getFallbackInfo(),
-      ...parsed,
-    };
+    return normalizeUpdateInfo(parsed);
   } catch {
     return null;
   }
@@ -86,19 +112,19 @@ function publishUpdateInfo(info) {
 
 function parseReleaseInfo(payload) {
   const latestTag = payload?.tag_name || payload?.name || CURRENT_DISPLAY_VERSION;
-  const latestVersion = normalizeVersion(latestTag).length ? latestTag : CURRENT_VERSION;
-  const available = compareVersions(latestTag, CURRENT_VERSION) > 0;
+  const latestVersion = getComparableLatestVersion({
+    latestTag,
+    releaseName: payload?.name || latestTag,
+  });
 
-  return {
-    ...getFallbackInfo(),
-    available,
+  return normalizeUpdateInfo({
     checkedAt: Date.now(),
     latestTag,
     latestVersion,
     releaseName: payload?.name || latestTag,
     releaseUrl: payload?.html_url || RELEASES_URL,
     publishedAt: payload?.published_at || null,
-  };
+  });
 }
 
 export function getCachedUpdateInfo() {
