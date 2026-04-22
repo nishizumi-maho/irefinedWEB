@@ -1,5 +1,24 @@
 # Changelog
 
+## V6 - 2026-04-21
+
+### Fixed
+
+- Rebased the release from the stable `v5.2` code line instead of the previous experimental branch.
+- Fixed iRefined `Register`, `Withdraw`, and queue button discovery so the extension can attach its controls when the WEBUI is using supported non-English languages.
+- Replaced English-only WEBUI text matching with localized label checks and React-prop session discovery for the top card and session tables.
+
+### Changed
+
+- Updated extension versioning to `6.0.0` / `v6`.
+- Kept the scope intentionally narrow for this release: no translation layer, no remote page translation, and no extra UI localization work beyond making existing iRefined controls appear reliably.
+
+### Validation
+
+- `npm install`
+- `npm run build`
+- Manual source review of non-English WEBUI selectors in `auto-register.js`
+
 ## V5.2 - 2026-04-18
 
 ### Fixed

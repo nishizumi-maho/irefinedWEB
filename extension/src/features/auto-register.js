@@ -3,6 +3,13 @@ import features from "../feature-manager.js";
 import { findMemoizedProps } from "../helpers/react-resolver.js";
 import { getSettings } from "../helpers/settings.js";
 import { initSoundSupport, playQueueRegisteredSound } from "../helpers/sound.js";
+import {
+  getFirstSessionActionEntry,
+  getSessionActionEntries,
+  includesWebUiLabel,
+  isVisible,
+  startsWithWebUiLabel,
+} from "../helpers/webui-locale.js";
 import ws from "../helpers/websockets.js";
 import "./auto-register.css";
 
@@ -21,6 +28,42 @@ const optimisticWithdrawWindowMs = 15 * 1000;
 const raceEventType = 5;
 const qualifyEventType = 3;
 const practiceEventType = 2;
+const EVENT_TYPE_NAME_ALIASES = {
+  [raceEventType]: [
+    "race",
+    "races",
+    "corrida",
+    "corridas",
+    "carrera",
+    "carreras",
+    "rennen",
+    "gara",
+    "gare",
+    "course",
+    "courses",
+  ],
+  [qualifyEventType]: [
+    "qual",
+    "quali",
+    "qualify",
+    "qualifying",
+    "qualification",
+    "qualificacao",
+    "clasificacion",
+    "qualifikation",
+    "qualifica",
+    "qualific",
+  ],
+  [practiceEventType]: [
+    "practice",
+    "pratica",
+    "practica",
+    "treino",
+    "training",
+    "entrain",
+    "allenamento",
+  ],
+};
 let persistInterval = 0;
 
 function isQueueCarPromptEnabled() {
@@ -37,6 +80,16 @@ function normalizeText(text = "") {
 
 function normalizeSearchText(text = "") {
   return normalizeText(text).toLowerCase();
+}
+
+function normalizeAliasText(text = "") {
+  const normalized = normalizeSearchText(text);
+
+  if (typeof normalized.normalize !== "function") {
+    return normalized;
+  }
+
+  return normalized.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function toNumber(value) {
@@ -427,11 +480,21 @@ function getQueueEventType(item) {
     return item.event_type;
   }
 
-  if (/qual/i.test(item?.event_type_name || "")) {
-    return qualifyEventType;
+  return inferEventTypeFromName(item?.event_type_name || "") ?? raceEventType;
+}
+
+function inferEventTypeFromName(eventTypeName = "") {
+  const normalizedName = normalizeAliasText(eventTypeName);
+
+  if (!normalizedName) {
+    return null;
   }
 
-  return raceEventType;
+  const matchedEntry = Object.entries(EVENT_TYPE_NAME_ALIASES).find(
+    ([, aliases]) => aliases.some((alias) => normalizedName.includes(alias))
+  );
+
+  return matchedEntry ? Number(matchedEntry[0]) : null;
 }
 
 function getSessionEventType(session = {}) {
@@ -441,19 +504,7 @@ function getSessionEventType(session = {}) {
     return eventType;
   }
 
-  if (/practice/i.test(session.event_type_name || "")) {
-    return practiceEventType;
-  }
-
-  if (/qual/i.test(session.event_type_name || "")) {
-    return qualifyEventType;
-  }
-
-  if (/race/i.test(session.event_type_name || "")) {
-    return raceEventType;
-  }
-
-  return null;
+  return inferEventTypeFromName(session.event_type_name || "");
 }
 
 function getSessionEventName(session = {}) {
@@ -489,18 +540,15 @@ function sessionMatchesQueueEvent(session, queueItem) {
 }
 
 function isRaceSession(session = {}) {
-  return getSessionEventType(session) === raceEventType ||
-    /race/i.test(session.event_type_name || "");
+  return getSessionEventType(session) === raceEventType;
 }
 
 function isQualifySession(session = {}) {
-  return getSessionEventType(session) === qualifyEventType ||
-    /qual/i.test(session.event_type_name || "");
+  return getSessionEventType(session) === qualifyEventType;
 }
 
 function isPracticeSession(session = {}) {
-  return getSessionEventType(session) === practiceEventType ||
-    /practice/i.test(session.event_type_name || "");
+  return getSessionEventType(session) === practiceEventType;
 }
 
 function isQueueableSession(session = {}) {
@@ -575,56 +623,158 @@ function findHeading(matcher) {
   );
 }
 
-function isVisible(el) {
-  return !!el && !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+function getNextRaceEntryOptions() {
+  return {
+    visibleOnly: false,
+    skipSelectors: ["#iref-top-action-row", "#iref-top-queue-row", "#iref-ui-root"],
+  };
+}
+
+function getScopedSessionEntries(root = document, options = {}) {
+  const { visibleOnly = false, excludeTables = false } = options;
+
+  return getSessionActionEntries(root, {
+    ...getNextRaceEntryOptions(),
+    visibleOnly,
+  }).filter(({ button }) => !excludeTables || !button.closest("table"));
+}
+
+function compareElementsByViewport(left, right) {
+  const leftRect = left.getBoundingClientRect();
+  const rightRect = right.getBoundingClientRect();
+
+  if (leftRect.top !== rightRect.top) {
+    return leftRect.top - rightRect.top;
+  }
+
+  if (leftRect.left !== rightRect.left) {
+    return leftRect.left - rightRect.left;
+  }
+
+  return 0;
+}
+
+function findSessionCardSection(entry) {
+  if (!entry?.button) {
+    return null;
+  }
+
+  let node = entry.button.parentElement;
+  let best = null;
+
+  while (node && node !== document.body) {
+    if (typeof node.querySelector !== "function") {
+      node = node.parentElement;
+      continue;
+    }
+
+    if (node.querySelector("table")) {
+      break;
+    }
+
+    const entries = getScopedSessionEntries(node, {
+      visibleOnly: false,
+      excludeTables: true,
+    });
+
+    if (!entries.some(({ button }) => button === entry.button)) {
+      node = node.parentElement;
+      continue;
+    }
+
+    if (entries.length === 1 && getTextLines(node.innerText || "").length >= 4) {
+      best = node;
+    }
+
+    node = node.parentElement;
+  }
+
+  return best || findActionRowAnchor(entry.button)?.parentElement || entry.button.parentElement;
+}
+
+function findFallbackNextRaceEntry() {
+  return getScopedSessionEntries(document, {
+    visibleOnly: false,
+    excludeTables: true,
+  })
+    .filter(({ props }) => isQueueableSession(props?.session))
+    .map((entry) => ({
+      entry,
+      section: findSessionCardSection(entry),
+    }))
+    .filter(({ section }) => !!section)
+    .sort(
+      (left, right) =>
+        compareElementsByViewport(left.section, right.section) ||
+        compareElementsByViewport(left.entry.button, right.entry.button)
+    )[0]?.entry || null;
+}
+
+function findStructuredSessionTableSection(predicate, excludeSection = null) {
+  const entry = getSessionActionEntries(document, { visibleOnly: false }).find(
+    ({ button, props }) =>
+      !excludeSection?.contains(button) &&
+      (!predicate || predicate(props, button))
+  );
+
+  if (!entry) {
+    return null;
+  }
+
+  return findClosest(entry.button, (node) =>
+    node !== entry.button &&
+    typeof node.querySelector === "function" &&
+    !!node.querySelector("table")
+  );
 }
 
 function findNextRaceSection() {
-  const heading = findHeading((text) => text.startsWith("Next Race @"));
-
-  if (!heading) {
-    return null;
-  }
-
-  return findClosest(heading, (node) => {
-    const text = normalizeText(node.innerText || "");
-    return (
-      text.includes("Up Next") &&
-      (text.includes("More ways to race") || text.includes("Race Duration"))
-    );
-  });
-}
-
-function findAvailableSessionsSection() {
-  const heading = findHeading((text) => normalizeSearchText(text).startsWith("available"));
-
-  if (!heading) {
-    return null;
-  }
-
-  return findClosest(heading, (node) => {
-    const text = normalizeText(node.innerText || "");
-    return normalizeSearchText(text).includes("ongoing or upcoming");
-  });
-}
-
-function findPracticeSessionsSection() {
   const heading = findHeading((text) =>
-    normalizeSearchText(text).startsWith("practices")
+    startsWithWebUiLabel(text, "nextRacePrefix")
   );
 
   if (!heading) {
-    return null;
+    return findSessionCardSection(findFallbackNextRaceEntry());
   }
 
   return findClosest(heading, (node) => {
-    const text = normalizeSearchText(node.innerText || "");
+    const text = normalizeText(node.innerText || "");
     return (
-      text.includes("practices") &&
-      text.includes("event start") &&
-      text.includes("track")
+      startsWithWebUiLabel(text, "nextRacePrefix") &&
+      (!!getFirstSessionActionEntry(node, getNextRaceEntryOptions()) ||
+        includesWebUiLabel(text, "upNext") ||
+        includesWebUiLabel(text, "raceDuration"))
     );
-  });
+  }) || findSessionCardSection(findFallbackNextRaceEntry());
+}
+
+function findAvailableSessionsSection() {
+  const description = [...document.querySelectorAll("p, span, div")].find((el) =>
+    includesWebUiLabel(el.textContent || "", "availableSessionsDescription")
+  );
+  const describedSection = description
+    ? findClosest(description, (node) =>
+        node !== description &&
+        typeof node.querySelector === "function" &&
+        !!node.querySelector("table")
+      )
+    : null;
+
+  if (describedSection) {
+    return describedSection;
+  }
+
+  return findStructuredSessionTableSection(
+    (props) => isQueueableSession(props?.session),
+    findNextRaceSection()
+  );
+}
+
+function findPracticeSessionsSection() {
+  return findStructuredSessionTableSection(
+    (props) => isPracticeSession(props?.session),
+    findNextRaceSection()
+  );
 }
 
 function findCurrentlyRacingSection() {
@@ -663,16 +813,28 @@ function restoreNativeSessionActions(section) {
 
 function findNativeWithdrawAction() {
   const nextRaceSection = findNextRaceSection();
+  const nextRaceEntry = nextRaceSection ? findNextRaceProps(nextRaceSection) : null;
+  const actionScope =
+    (nextRaceEntry?.button && findActionRowAnchor(nextRaceEntry.button)?.parentElement) ||
+    nextRaceSection;
 
-  if (!nextRaceSection) {
+  if (!actionScope) {
     return null;
   }
 
-  return [...nextRaceSection.querySelectorAll("button, a")]
+  const nativeSessionButtons = new Set(
+    getSessionActionEntries(actionScope, { visibleOnly: false }).map(
+      ({ button }) => button
+    )
+  );
+
+  return [...actionScope.querySelectorAll("button, a")]
     .filter((el) => !el.closest("#iref-top-action-row"))
+    .filter((el) => !el.closest("#iref-top-queue-row"))
     .filter((el) => !el.closest("#iref-ui-root"))
     .filter((el) => isVisible(el))
-    .find((el) => /^Withdraw$/i.test(normalizeText(el.innerText || el.textContent || "")));
+    .filter((el) => !nativeSessionButtons.has(el))
+    .find((el) => !!normalizeText(el.innerText || el.textContent || ""));
 }
 
 function tryWithdrawCurrentSession() {
@@ -687,26 +849,15 @@ function tryWithdrawCurrentSession() {
 }
 
 function findNextRaceProps(section) {
-  const viewButton = [...section.querySelectorAll("button, a")].find((button) =>
-    /View in iRacing/i.test(
-      normalizeText(button.innerText || button.textContent || "")
-    )
-  );
+  const nextRaceEntry = section
+    ? getFirstSessionActionEntry(section, getNextRaceEntryOptions())
+    : findFallbackNextRaceEntry();
 
-  if (!viewButton) {
+  if (!nextRaceEntry?.button || !nextRaceEntry?.props?.session) {
     return null;
   }
 
-  const props = findMemoizedProps(
-    viewButton,
-    (candidate) => candidate.session && candidate.contentId
-  );
-
-  if (!props?.session) {
-    return null;
-  }
-
-  return { button: viewButton, props };
+  return nextRaceEntry;
 }
 
 function seasonsMatch(state, seasonId, seasonName = "") {
@@ -838,19 +989,12 @@ function getQueueSlots(section, sessionProps) {
       start_time: sessionStart.toISOString(),
     },
   ];
-  const upNextLine = getTextLines(section.innerText || "").find((line) =>
-    line.startsWith("Up Next ")
-  );
-
-  if (!upNextLine) {
-    return slots;
-  }
-
-  const labels = upNextLine
-    .replace(/^Up Next\s+/, "")
-    .split(",")
-    .map((item) => normalizeText(item))
-    .filter(Boolean);
+  const lines = getTextLines(section.innerText || "");
+  const upNextLine = lines.find((line) => startsWithWebUiLabel(line, "upNext"));
+  const candidateLine =
+    upNextLine ||
+    lines.find((line) => (line.match(/\b\d{1,2}:\d{2}\b/g) || []).length > 1);
+  const labels = [...new Set(candidateLine?.match(/\b\d{1,2}:\d{2}\b/g) || [])];
   let previousDate = sessionStart;
 
   labels.forEach((label) => {
@@ -1594,58 +1738,16 @@ function ensureTopQueueButtons(section, sessionProps) {
 }
 
 function getSessionButtonEntries(section, options = {}) {
-  const skipButtons = new Set((options.skipButtons || []).filter(Boolean));
-  const currentlyRacingSection = findCurrentlyRacingSection();
-  const buttons = [...section.querySelectorAll("button, a")]
-    .filter((button) => !skipButtons.has(button))
-    .filter((button) => !currentlyRacingSection?.contains(button))
-    .filter((button) => !button.closest(".iref-native-action-hidden"))
-    .filter((button) => !button.closest("#iref-top-action-row"))
-    .filter((button) => !button.closest("#iref-top-queue-row"))
-    .filter((button) => {
-      const label = normalizeText(button.innerText || button.textContent || "");
-
-      return /View in iRacing/i.test(label) || /^Register$/i.test(label);
-    });
-  const seen = new Set();
-
-  return buttons
-    .map((button) => ({
-      button,
-      props: findMemoizedProps(
-        button,
-        (candidate) => candidate.session && candidate.contentId
-      ),
-    }))
-    .filter(({ props }) => {
-      if (!props?.session) {
-        return false;
-      }
-
-      const seasonId = props.contentId ?? props.session.season_id ?? "";
-      const eventType =
-        getSessionEventType(props.session) ?? props.session.event_type_name ?? "";
-      const startTime = props.session.start_time
-        ? new Date(props.session.start_time).toISOString()
-        : "";
-      const sessionKey =
-        seasonId !== "" && startTime
-          ? `${seasonId}|${eventType}|${startTime}`
-          : [
-              seasonId,
-              eventType,
-              props.session.subsession_id ?? "",
-              props.session.session_id ?? "",
-              startTime,
-            ].join("|");
-
-      if (!sessionKey || seen.has(sessionKey)) {
-        return false;
-      }
-
-      seen.add(sessionKey);
-      return true;
-    });
+  return getSessionActionEntries(section, {
+    visibleOnly: false,
+    skipButtons: options.skipButtons || [],
+    skipSelectors: [
+      ".iref-native-action-hidden",
+      "#iref-top-action-row",
+      "#iref-top-queue-row",
+      "#iref-ui-root",
+    ],
+  }).filter(({ button }) => !findCurrentlyRacingSection()?.contains(button));
 }
 
 function resolveRegisterableSessionProps(section, sessionProps) {
@@ -1658,6 +1760,9 @@ function resolveRegisterableSessionProps(section, sessionProps) {
   }
 
   const availableSessionsSection = findAvailableSessionsSection();
+  const nextRaceButton = findNextRaceSection()
+    ? findNextRaceProps(findNextRaceSection())?.button
+    : null;
 
   if (!availableSessionsSection) {
     return sessionProps;
@@ -1666,7 +1771,9 @@ function resolveRegisterableSessionProps(section, sessionProps) {
   const targetSeasonId = toNumber(sessionProps.contentId ?? sessionProps.session.season_id);
   const targetEventType = getSessionEventType(sessionProps.session);
   const targetStartTime = new Date(sessionProps.session.start_time).toISOString();
-  const entries = getSessionButtonEntries(availableSessionsSection)
+  const entries = getSessionButtonEntries(availableSessionsSection || document, {
+    skipButtons: [nextRaceButton],
+  })
     .map(({ props }) => props)
     .filter((props) => props?.session);
   const exactMatch = entries.find((props) => {
