@@ -2,7 +2,7 @@
 
 ## iRefined
 
-iRefinedX adapts selected assets and portions of code from the original iRefined project by Jason Murray.
+iRefinedWEB adapts selected assets and portions of code from the original iRefined project by Jason Murray.
 
 - Original project: https://github.com/jason-murray/irefined
 - Original license: MIT
